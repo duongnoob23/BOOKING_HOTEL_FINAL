@@ -39,10 +39,25 @@ import ReusableModal from "../../Components/Modal/FlexibleModal/ReusableModal";
 import ModalBookingCancelled from "../../Components/Modal/Booking/ModalBookingCancelled";
 import ModalDatePicker from "../../Components/Modal/Home/ModalDatePicker"; // Đã import
 import { showToast } from "../../Utils/toast";
+
+// import SkeletonHomeScreen from "../../Components/Skeleton/Home/SkeletonHomeScreen";
+import SkeletonOrderConfirmScreen from "../../Components/Skeleton/Hotels/SkeletonOrderConfirm";
+import SkeletonHomeScreen from "../../Components/Skeleton/Home/SkeletonHomeScreen";
+
 const HomeScreen = ({ navigation }) => {
-  const { hotelHistorySearch, hotelList, locationList, inforFilter } =
-    useAppSelector((state) => state.hotel); // lấy thông tin danh sách tìm kiếm sau khi search, danh sách ưu đãi cuối tuần, lịch sử tìm kiếm
+  const {
+    hotelHistorySearch,
+    hotelList,
+    locationList,
+    inforFilter,
+    loadingHL,
+    loadingLL,
+    errorHL,
+    errorLL,
+  } = useAppSelector((state) => state.hotel); // lấy thông tin danh sách tìm kiếm sau khi search, danh sách ưu đãi cuối tuần, lịch sử tìm kiếm
   const dispatch = useAppDispatch();
+
+  console.log("3 ", hotelList);
 
   const [open, setOpen] = useState({
     Modal_1: false,
@@ -55,23 +70,89 @@ const HomeScreen = ({ navigation }) => {
 
   const continueSearch = hotelHistorySearch; // biến lưu dữ liệu danh sách tìm kiếm
 
-  // console.log(">>>>> 104 HomeScreen inforFilter", inforFilter);
-  // console.log("----- 105 HomeScreen selectDay", selectDay);
+  const fetchHotels = async (retryCount = 2, delay = 1000) => {
+    for (let attempt = 1; attempt <= retryCount; attempt++) {
+      try {
+        // console.log("goi try catch lan 1");
+        await dispatch(fetchHotelList()).unwrap();
+        return;
+      } catch (error) {
+        showToast({
+          type: "error",
+          text1: "Lỗi tải dữ liệu",
+          text2: "Không thể tải danh sách khách sạn ",
+          position: "top-right",
+          duration: 3000,
+        });
+        console.log(`Attempt ${attempt} failed to fetch hotel list:`, error);
+        if (attempt === retryCount) {
+          throw error;
+        }
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+      }
+    }
+  };
+
+  const fetchLocations = async (retryCount = 2, delay = 1000) => {
+    for (let attempt = 1; attempt <= retryCount; attempt++) {
+      try {
+        // console.log("goi try catch lan 1");
+        await dispatch(fetchLocationList()).unwrap();
+        return;
+      } catch (error) {
+        showToast({
+          type: "error",
+          text1: "Lỗi tải dữ liệu",
+          text2: "Không thể tải danh sách địa điểm  ",
+          position: "top-right",
+          duration: 3000,
+        });
+        console.log(`Attempt ${attempt} failed to fetch location list:`, error);
+        if (attempt === retryCount) {
+          throw error;
+        }
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+      }
+    }
+  };
+
+  const fetchData = async () => {
+    try {
+      await Promise.all([fetchHotels(), fetchLocations()]);
+    } catch (error) {
+      console.error("Failed to fetch data in HomeScreen:", error);
+      showToast({
+        type: "error",
+        text1: "Lỗi tải dữ liệu",
+        text2: "Không thể tải danh sách khách sạn hoặc địa điểm.",
+        position: "top-right",
+        duration: 3000,
+      });
+    }
+  };
+
   useEffect(() => {
-    dispatch(fetchServiceList());
-    dispatch(fetchAmenityList());
-    dispatch(fetchHotelList());
-    dispatch(fetchLocationList());
+    fetchData();
   }, [dispatch]);
 
-  // useEffect(() => {
-  //   dispatch(fetchHotelList());
-  // }, [hotelHistorySearch]);
+  const handleRetry = () => {
+    fetchData();
+  };
 
   const handleToHotelDetails = (item) => {
-    const id = item?.hotelId;
-    dispatch(fetchHotelById(id));
-    navigation.navigate("HotelDetails", { item });
+    if (item && item !== "") {
+      navigation.navigate("HotelDetails", { item });
+    } else {
+      showToast({
+        type: "error",
+        text1: "Lõi thiếu dữ liệu ",
+        text2: "Không có dữ liệu item truyền sang HotelDetails",
+        position: "top-right",
+        duration: 3000,
+      });
+    }
+    // const id = item?.hotelId;
+    // dispatch(fetchHotelById(id));
   }; // hàm chuyển sang hotel Detail, nên bắt try catch , kiểm tra xem có id không, nên gọi dispatch ở bên hotelDetails
 
   const handleCloseModal = (name) => {
@@ -93,11 +174,11 @@ const HomeScreen = ({ navigation }) => {
     const month = String(date.getMonth() + 1).padStart(2, "0");
     const year = date.getFullYear();
     return `${year}-${month}-${day}`;
-  };
+  }; // chuẩn hóa ngày tháng năm hiển thì YYYY-MM-DD
 
   const normalizeDate = (date) => {
     return new Date(date.getFullYear(), date.getMonth(), date.getDate());
-  };
+  }; // chuẩn hóa về ngày tháng năm, không có giờ để tiện so sánh (do việt nam bị lệch múi giờ)
 
   const handleConfirmDate = (name, date) => {
     // Chuẩn hóa date và today để bỏ qua giờ/phút/giây
@@ -145,13 +226,13 @@ const HomeScreen = ({ navigation }) => {
               checkoutMonth,
               checkoutDay
             );
-            console.log("-2", checkoutParts);
-            console.log("-1", checkoutDate);
+            // console.log("-2", checkoutParts);
+            // console.log("-1", checkoutDate);
 
             // 3. Nếu check-out nhỏ hơn hoặc bằng check-in, đặt check-out = check-in + 1
             if (checkoutDate <= date) {
-              console.log("kiểm tra ngày checkout ", checkoutDate);
-              console.log("kiểm tra ngày date ", date);
+              // console.log("kiểm tra ngày checkout ", checkoutDate);
+              // console.log("kiểm tra ngày date ", date);
               const nextDay = new Date(date);
               nextDay.setDate(date.getDate() + 1);
               updatedFilter.checkout = formatToDDMMYYYY(nextDay);
@@ -205,8 +286,8 @@ const HomeScreen = ({ navigation }) => {
             !isNaN(checkinDay)
           ) {
             const checkinDate = new Date(checkinYear, checkinMonth, checkinDay);
-            console.log("2", checkinParts);
-            console.log("3", checkinDate);
+            // console.log("2", checkinParts);
+            // console.log("3", checkinDate);
 
             if (date <= checkinDate) {
               showToast({
@@ -239,8 +320,8 @@ const HomeScreen = ({ navigation }) => {
 
   const handleFilterHotel = () => {
     dispatch(skeletonLoading());
-    dispatch(fetchHotelByLocation(inforFilter));
-    console.log(">>> run 0");
+    // dispatch(fetchHotelByLocation(inforFilter));
+    // console.log(">>> run 0");
     navigation.navigate("ListHotelLocation");
   }; // hàm gọi ListHotelByLocation search từ nút tìm kiếm
 
@@ -264,6 +345,10 @@ const HomeScreen = ({ navigation }) => {
   }; // Hàm gọi HotelDetails từ HistorySearch
 
   // console.log("1", inforFilter);
+
+  if (loadingHL || loadingLL) {
+    return <SkeletonHomeScreen />;
+  }
 
   const HotelRequestList = ({ item }) => {
     return (
@@ -305,7 +390,6 @@ const HomeScreen = ({ navigation }) => {
       </TouchableOpacity>
     );
   }; // phần hiển thị giao diện ưu đãi cuối cùng , cần phải chỉnh sửa lại để hiển thị nhiều loại ưu đãi trong dữ liệu hơn
-
   return (
     <SafeAreaView style={styles.container}>
       {/* Header */}
@@ -340,6 +424,7 @@ const HomeScreen = ({ navigation }) => {
           onSelect={(locationId) =>
             dispatch(updateFilter({ ...inforFilter, locationId: locationId }))
           }
+          handleRetry={handleRetry}
         />
         <TouchableOpacity
           style={styles.inputContainer}
@@ -430,59 +515,108 @@ const HomeScreen = ({ navigation }) => {
               <Text style={styles.viewAllText}>XEM TẤT CẢ</Text>
             </TouchableOpacity>
           </View>
-          <View>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-              <View
-                style={[
-                  styles.twoRowScrollView,
-                  { width: WidthtwoRowScrollView },
-                ]}
+
+          {errorHL === null ? (
+            <View>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                <View
+                  style={[
+                    styles.twoRowScrollView,
+                    { width: WidthtwoRowScrollView },
+                  ]}
+                >
+                  {continueSearch?.map((item, index) => {
+                    return (
+                      <TouchableOpacity
+                        onPress={() => handleContinueSearch(item)}
+                        key={index}
+                        style={styles.recentSearchItem}
+                      >
+                        <Image
+                          source={{
+                            uri: `${item?.image}`,
+                          }}
+                          style={styles.recentSearchImage}
+                        />
+                        <View style={styles.recentSearchDetails}>
+                          <Text style={styles.recentSearchText}>
+                            {item?.location}
+                          </Text>
+                          <Text style={styles.recentSearchSubText}>
+                            Từ {item?.checkIn} đến {item?.checkOut} ,
+                            {item?.adults}
+                            Người lớn , {item?.children} Trẻ em
+                          </Text>
+                        </View>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              </ScrollView>
+            </View>
+          ) : (
+            <View style={styles.sectionErorHL}>
+              <TouchableOpacity
+                style={styles.errorHL}
+                onPress={() => handleRetry()}
               >
-                {continueSearch?.map((item, index) => {
-                  return (
-                    <TouchableOpacity
-                      onPress={() => handleContinueSearch(item)}
-                      key={index}
-                      style={styles.recentSearchItem}
-                    >
-                      <Image
-                        source={{
-                          uri: `${item?.image}`,
-                        }}
-                        style={styles.recentSearchImage}
-                      />
-                      <View style={styles.recentSearchDetails}>
-                        <Text style={styles.recentSearchText}>
-                          {item?.location}
-                        </Text>
-                        <Text style={styles.recentSearchSubText}>
-                          Từ {item?.checkIn} đến {item?.checkOut} ,
-                          {item?.adults}
-                          Người lớn , {item?.children} Trẻ em
-                        </Text>
-                      </View>
-                    </TouchableOpacity>
-                  );
-                })}
-              </View>
-            </ScrollView>
-          </View>
+                <Text style={styles.errorHLText}>Thử lại </Text>
+              </TouchableOpacity>
+            </View>
+          )}
         </View>
-        <View style={styles.section}>
+        {/* <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>ƯU ĐÃI CUỐI TUẦN</Text>
             <TouchableOpacity>
               <Text style={styles.viewAllText}>XEM TẤT CẢ</Text>
             </TouchableOpacity>
           </View>
+          {errorHL === null ? (
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              {hotelList &&
+                hotelList.map((item, index) => {
+                  return <HotelRequestList key={index} item={item} />;
+                })}
+            </ScrollView>
+          ) : (
+            <View style={styles.sectionErorHL}>
+              <TouchableOpacity
+                style={styles.errorHL}
+                onPress={() => handleRetry()}
+              >
+                <Text style={styles.errorHLText}>Thử lại </Text>
+              </TouchableOpacity>
+            </View>
+          )}
+        </View> */}
 
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            {hotelList &&
-              hotelList.map((item, index) => {
-                return <HotelRequestList key={index} item={item} />;
-              })}
-          </ScrollView>
-        </View>
+        {Object.keys(hotelList)?.map((promotionName) => (
+          <View key={promotionName} style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>
+                {promotionName.toUpperCase()}
+              </Text>
+              <TouchableOpacity>
+                <Text style={styles.viewAllText}>XEM TẤT CẢ</Text>
+              </TouchableOpacity>
+            </View>
+            {errorHL ? (
+              <View style={styles.sectionErorHL}>
+                <TouchableOpacity style={styles.errorHL} onPress={handleRetry}>
+                  <Text style={styles.errorHLText}>Thử lại </Text>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                {hotelList[promotionName] &&
+                  hotelList[promotionName].map((item, index) => (
+                    <HotelRequestList key={index} item={item} />
+                  ))}
+              </ScrollView>
+            )}
+          </View>
+        ))}
         <View style={styles.lastSection}></View>
         <View>
           <Text>{"\n\n"}</Text>
@@ -835,6 +969,25 @@ const styles = StyleSheet.create({
     // marginBottom: 20,
     // paddingBottom: 50,
   },
+  sectionErorHL: {
+    justifyContent: "center",
+    alignItems: "center",
+    height: 100,
+    backgroundColor: "white",
+  },
+  errorHL: {
+    backgroundColor: "white",
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "gray",
+    padding: 20,
+    paddingVertical: 10,
+  },
+  errorHLText: {
+    color: "gray",
+    fontSize: 16,
+    fontWeight: "400",
+  },
 });
 
 //  const getData = async () => {
@@ -867,3 +1020,5 @@ const styles = StyleSheet.create({
 //   amenityIds: [],
 //   serviceIds: [],
 // });
+
+// tạo skeleton cho HomeScreen, bắt loadingLL, loadingHL, errorHl, errorLL

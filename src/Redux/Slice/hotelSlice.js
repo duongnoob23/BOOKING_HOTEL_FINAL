@@ -485,6 +485,14 @@ const hotelSlice = createSlice({
     sendReviewError: null,
     sendReviewSuccess: false,
     navigateFoodCart: null,
+
+    // quản lý trạng thái fetchHotelList
+    loadingHL: false,
+    errorHL: null,
+    // quản lý trạng thái fetchLocationList
+    // quản lý trạng thái fetchLocationList
+    loadingLL: true,
+    errorLL: null,
   },
   reducers: {
     setNavigateFoodCart(state, action) {
@@ -592,17 +600,41 @@ const hotelSlice = createSlice({
   extraReducers: (builder) => {
     builder
       .addCase(fetchHotelList.pending, (state) => {
-        state.loading = true;
-        state.error = null;
+        state.loadingHL = true;
+        state.errorHL = null;
       })
       .addCase(fetchHotelList.fulfilled, (state, action) => {
-        state.loading = false;
-        state.hotelList = action.payload?.[0]?.hotelRequestList || [];
+        state.loadingHL = false;
         state.hotelHistorySearch = action.payload?.[0]?.historySearchList || [];
+        state.errorHL = null;
+
+        // Khởi tạo object để lưu các khách sạn theo promotionName
+        const hotelListByPromotion = {};
+
+        // Duyệt qua tất cả các phần tử trong action.payload
+        action.payload?.forEach((item) => {
+          const hotelRequestList = item?.hotelRequestList || [];
+
+          // Duyệt qua từng khách sạn trong hotelRequestList
+          hotelRequestList.forEach((hotel) => {
+            const promotionName = hotel.promotionName || "Không có khuyến mãi"; // Nếu không có promotionName, gán mặc định
+
+            // Nếu promotionName chưa tồn tại trong object, khởi tạo mảng rỗng
+            if (!hotelListByPromotion[promotionName]) {
+              hotelListByPromotion[promotionName] = [];
+            }
+
+            // Thêm khách sạn vào mảng tương ứng với promotionName
+            hotelListByPromotion[promotionName].push(hotel);
+          });
+        });
+
+        // Lưu object vào state.hotelList
+        state.hotelList = hotelListByPromotion;
       })
       .addCase(fetchHotelList.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload || action.error.message;
+        state.loadingHL = false;
+        state.errorHL = action.payload || action.error.message;
       })
       .addCase(fetchHotelById.pending, (state) => {
         state.loading = true;
@@ -617,16 +649,17 @@ const hotelSlice = createSlice({
         state.error = action.payload || action.error.message;
       })
       .addCase(fetchLocationList.pending, (state) => {
-        state.loading = true;
-        state.error = null;
+        state.loadingLL = true;
+        state.errorLL = null;
       })
       .addCase(fetchLocationList.fulfilled, (state, action) => {
-        state.loading = false;
+        state.loadingLL = false;
         state.locationList = action.payload || [];
+        state.errorLL = null;
       })
       .addCase(fetchLocationList.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload || action.error.message;
+        state.loadingLL = false;
+        state.errorLL = action.payload || action.error.message;
       })
       .addCase(fetchHotelByLocation.pending, (state) => {
         state.loadingListHotel = true;

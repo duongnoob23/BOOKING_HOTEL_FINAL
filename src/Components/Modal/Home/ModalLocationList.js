@@ -10,9 +10,10 @@ import {
 import Icon from "react-native-vector-icons/FontAwesome";
 import { useAppSelector } from "../../../Redux/hook";
 
-const ModalLocationList = ({ visible, onClose, onSelect }) => {
+const ModalLocationList = ({ visible, onClose, onSelect, handleRetry }) => {
   // Thay position bằng visible
-  const { hotelList, locationList, hotelDetail, loading, error } =
+
+  const { hotelList, locationList, hotelDetail, loadingLL, errorLL } =
     useAppSelector((state) => state.hotel);
 
   return (
@@ -20,24 +21,33 @@ const ModalLocationList = ({ visible, onClose, onSelect }) => {
       <View style={styles.modalOverlay}>
         <View style={styles.modalContainer}>
           <Text style={styles.modalTitle}>Chọn địa điểm</Text>
-
-          <ScrollView style={styles.scrollView}>
-            {locationList &&
-              locationList?.map((item) => (
-                <TouchableOpacity
-                  key={item.id.toString()}
-                  style={styles.locationItem}
-                  onPress={() => {
-                    onSelect(item.id.toString());
-                    onClose();
-                  }}
-                >
-                  <Icon name="map-marker" size={24} color="#0090FF" />
-                  <Text style={styles.locationText}>{item.name}</Text>
-                </TouchableOpacity>
-              ))}
-          </ScrollView>
-
+          {errorLL === null ? (
+            <ScrollView style={styles.scrollView}>
+              {locationList &&
+                locationList?.map((item) => (
+                  <TouchableOpacity
+                    key={item.id.toString()}
+                    style={styles.locationItem}
+                    onPress={() => {
+                      onSelect(item.id.toString());
+                      onClose();
+                    }}
+                  >
+                    <Icon name="map-marker" size={24} color="#0090FF" />
+                    <Text style={styles.locationText}>{item.name}</Text>
+                  </TouchableOpacity>
+                ))}
+            </ScrollView>
+          ) : (
+            <View style={styles.sectionErorHL}>
+              <TouchableOpacity
+                style={styles.errorHL}
+                onPress={() => handleRetry()}
+              >
+                <Text style={styles.errorHLText}>Thử lại </Text>
+              </TouchableOpacity>
+            </View>
+          )}
           <TouchableOpacity style={styles.closeButton} onPress={onClose}>
             <Text style={styles.closeButtonText}>Đóng</Text>
           </TouchableOpacity>
@@ -47,6 +57,10 @@ const ModalLocationList = ({ visible, onClose, onSelect }) => {
   );
 };
 
+// {errorLL !== null ? (
+
+{
+}
 export default ModalLocationList;
 
 const styles = StyleSheet.create({
@@ -100,5 +114,24 @@ const styles = StyleSheet.create({
     color: "white",
     fontSize: 16,
     fontWeight: "bold",
+  },
+  sectionErorHL: {
+    justifyContent: "center",
+    alignItems: "center",
+    height: 100,
+    backgroundColor: "white",
+  },
+  errorHL: {
+    backgroundColor: "white",
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "gray",
+    padding: 20,
+    paddingVertical: 10,
+  },
+  errorHLText: {
+    color: "gray",
+    fontSize: 16,
+    fontWeight: "400",
   },
 });
