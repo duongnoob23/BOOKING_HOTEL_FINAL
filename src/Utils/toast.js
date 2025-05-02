@@ -70,6 +70,7 @@ const styles = StyleSheet.create({
     flexDirection: "row", // Đặt icon và text theo hàng ngang
     alignItems: "center",
     minWidth: 300,
+    zIndex: 99999,
   },
   icon: {
     marginRight: 10, // Khoảng cách giữa icon và text

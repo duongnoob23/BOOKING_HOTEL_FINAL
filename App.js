@@ -27,10 +27,12 @@ const AppContent = () => {
 
 export default function App() {
   return (
-    <Provider store={store}>
-      <Navigation />
-      <Toast config={toastConfig} />
-    </Provider>
+    <>
+      <Provider store={store}>
+        <Navigation />
+      </Provider>
+      <Toast config={toastConfig} style={{ zIndex: 99999 }} />
+    </>
   );
 }
 

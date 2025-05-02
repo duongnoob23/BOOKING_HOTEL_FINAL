@@ -5,75 +5,68 @@ import {
   TouchableOpacity,
   ScrollView,
   StyleSheet,
+  Modal, // Thêm Modal
 } from "react-native";
 import Icon from "react-native-vector-icons/FontAwesome";
 import { useAppSelector } from "../../../Redux/hook";
 
-const ModalLocationList = ({ position, onClose, onSelect }) => {
-  //   const locations = [
-  //     { description: "Đà Nẵng rất đẹp", id: 1, name: "Đà Nẵng", rating: 4.5 },
-  //     { description: "Lạng Sơn rất đẹp", id: 2, name: "Lạng Sơn", rating: 4.5 },
-  //     { description: "Lạng Sơn rất đẹp", id: 3, name: "Lạng Sơn1", rating: 4.5 },
-  //     { description: "Lạng Sơn rất đẹp", id: 4, name: "Lạng Sơn2", rating: 4.5 },
-  //     { description: "Lạng Sơn rất đẹp", id: 5, name: "Lạng Sơn3", rating: 4.5 },
-  //   ];
-
+const ModalLocationList = ({ visible, onClose, onSelect }) => {
+  // Thay position bằng visible
   const { hotelList, locationList, hotelDetail, loading, error } =
     useAppSelector((state) => state.hotel);
 
   return (
-    <View
-      style={[
-        styles.container,
-        {
-          top: position.top,
-          left: position.left,
-          width: position.width,
-        },
-      ]}
-    >
-      <Text style={styles.modalTitle}>Chọn địa điểm</Text>
+    <Modal visible={visible} animationType="none" transparent={true}>
+      <View style={styles.modalOverlay}>
+        <View style={styles.modalContainer}>
+          <Text style={styles.modalTitle}>Chọn địa điểm</Text>
 
-      <ScrollView style={styles.scrollView}>
-        {locationList &&
-          locationList?.map((item) => (
-            <TouchableOpacity
-              key={item.id.toString()}
-              style={styles.locationItem}
-              onPress={() => {
-                onSelect(item.id.toString());
-                onClose();
-              }}
-            >
-              <Icon name="map-marker" size={24} color="#0090FF" />
-              <Text style={styles.locationText}>{item.name}</Text>
-            </TouchableOpacity>
-          ))}
-      </ScrollView>
+          <ScrollView style={styles.scrollView}>
+            {locationList &&
+              locationList?.map((item) => (
+                <TouchableOpacity
+                  key={item.id.toString()}
+                  style={styles.locationItem}
+                  onPress={() => {
+                    onSelect(item.id.toString());
+                    onClose();
+                  }}
+                >
+                  <Icon name="map-marker" size={24} color="#0090FF" />
+                  <Text style={styles.locationText}>{item.name}</Text>
+                </TouchableOpacity>
+              ))}
+          </ScrollView>
 
-      <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-        <Text style={styles.closeButtonText}>Đóng</Text>
-      </TouchableOpacity>
-    </View>
+          <TouchableOpacity style={styles.closeButton} onPress={onClose}>
+            <Text style={styles.closeButtonText}>Đóng</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </Modal>
   );
 };
 
 export default ModalLocationList;
 
 const styles = StyleSheet.create({
-  container: {
-    position: "absolute",
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.2)", // Overlay trong suốt
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 1000,
+  },
+  modalContainer: {
     backgroundColor: "white",
     borderRadius: 10,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 5,
+    padding: 10, // Giảm padding để vừa với nội dung
+    width: "90%", // Chiều rộng cố định
+    maxHeight: "80%", // Giới hạn chiều cao
     zIndex: 1000,
   },
   scrollView: {
-    maxHeight: 200, // Giới hạn chiều cao để cuộn
+    maxHeight: 200,
   },
   modalTitle: {
     fontSize: 20,

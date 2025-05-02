@@ -456,8 +456,8 @@ const hotelSlice = createSlice({
     error: null,
     inforFilter: {
       locationId: "0",
-      checkin: checkinDate,
-      checkout: checkoutDate,
+      checkin: "",
+      checkout: "",
       adults: 1,
       children: 0,
       roomNumber: 1,

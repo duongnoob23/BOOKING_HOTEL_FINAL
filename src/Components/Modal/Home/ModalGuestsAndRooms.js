@@ -172,15 +172,17 @@ export default ModalGuestsAndRooms;
 const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    backgroundColor: "rgba(0, 0, 0, 0.2)",
     justifyContent: "center",
     alignItems: "center",
+    zIndex: 1000,
   },
   modalContainer: {
     backgroundColor: "white",
     borderRadius: 10,
     padding: 20,
     width: "80%",
+    zIndex: 1000,
   },
   modalTitle: {
     fontSize: 20,
