@@ -39,15 +39,15 @@ const PhotoScreen = () => {
     return (
       <TouchableOpacity
         onPress={() => {
-          setSelectedPhoto(item.url);
+          setSelectedPhoto(item?.url);
           setCurrentIndex(index); // Lưu chỉ số của ảnh được chọn
           setModalVisible(true);
         }}
         style={styles.photoItem}
       >
         <Image
-          source={{ uri: item.url }}
-          style={styles.photoImage}
+          source={{ uri: item?.url }}
+          style={styles?.photoImage}
           resizeMode="cover"
         />
       </TouchableOpacity>
@@ -77,7 +77,7 @@ const PhotoScreen = () => {
       <FlatList
         data={photoList2}
         renderItem={RenderPhotoItem}
-        keyExtractor={(item) => item.id.toString()}
+        keyExtractor={(item) => item?.id?.toString()}
         numColumns={NUM_COLUMNS}
         contentContainerStyle={styles.photoList}
         showsVerticalScrollIndicator={false}

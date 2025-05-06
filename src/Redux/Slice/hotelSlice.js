@@ -458,6 +458,8 @@ const hotelSlice = createSlice({
       locationId: "0",
       checkin: "",
       checkout: "",
+      checkInDate: "",
+      checkOutDate: "",
       adults: 1,
       children: 0,
       roomNumber: 1,
@@ -490,11 +492,62 @@ const hotelSlice = createSlice({
     loadingHL: false,
     errorHL: null,
     // quản lý trạng thái fetchLocationList
-    // quản lý trạng thái fetchLocationList
-    loadingLL: true,
+    loadingLL: false,
     errorLL: null,
+    // quản lý trạng thái fetchHotelById - HotelDetails
+    loadingHD: false,
+    errorHD: null,
   },
   reducers: {
+    changeCheckInDate(state, action) {
+      // state.inforFilter = {
+      //   ...state.inforFilter,
+      //   checkInDate: action.payload,
+      // };
+      //
+
+      console.log("run1");
+      console.log("7", action.payload);
+
+      const date = action.payload;
+      if (date) {
+        const formattedDate = date.split("T")[0];
+        state.inforFilter = {
+          ...state.inforFilter,
+          checkInDate: date,
+          checkin: formattedDate,
+        };
+        console.log("run2", state.inforFilter);
+      } else {
+        state.inforFilter = {
+          ...state.inforFilter,
+          checkInDate: "",
+          checkin: "",
+        };
+      }
+    },
+    changeCheckOutDate(state, action) {
+      console.log("run1");
+      console.log("7", action.payload);
+
+      const date = action.payload;
+      if (date) {
+        const formattedDate = date.split("T")[0];
+        state.inforFilter = {
+          ...state.inforFilter,
+          checkOutDate: date,
+          checkout: formattedDate,
+        };
+        console.log("run2", state.inforFilter);
+      } else {
+        state.inforFilter = {
+          ...state.inforFilter,
+          checkOutDate: "",
+          checkout: "",
+        };
+      }
+    },
+
     setNavigateFoodCart(state, action) {
       state.navigateFoodCart = action.payload;
     },
@@ -637,16 +690,17 @@ const hotelSlice = createSlice({
         state.errorHL = action.payload || action.error.message;
       })
       .addCase(fetchHotelById.pending, (state) => {
-        state.loading = true;
-        state.error = null;
+        state.loadingHD = true;
+        state.errorHD = null;
       })
       .addCase(fetchHotelById.fulfilled, (state, action) => {
-        state.loading = false;
+        state.loadingHD = false;
         state.hotelDetail = action.payload || null;
+        state.errorHD = null;
       })
       .addCase(fetchHotelById.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload || action.error.message;
+        state.loadingHD = false;
+        state.errorHD = action.payload || action.error.message;
       })
       .addCase(fetchLocationList.pending, (state) => {
         state.loadingLL = true;
@@ -764,6 +818,8 @@ const hotelSlice = createSlice({
 });
 
 export const {
+  changeCheckInDate,
+  changeCheckOutDate,
   clearHotelDetail,
   skeletonLoading,
   updateFilter,

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useLayoutEffect } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -8,7 +8,6 @@ import {
   ScrollView,
   StyleSheet,
   Dimensions,
-  BackHandler,
 } from "react-native";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import Icon from "react-native-vector-icons/FontAwesome";
@@ -18,8 +17,7 @@ import PhotoScreen from "./PhotoScreen";
 import CheckScreen from "./CheckScreen";
 import InfoConfirmScreen from "./InfoConfirmScreen";
 import OrderConfirmScreen from "./OrderConfirmScreen";
-import SkeletonPlaceholder from "react-native-skeleton-placeholder";
-import { API_BASE_URL } from "../../Constant/Constant";
+import SkeletonHotelDetails from "../../Components/Skeleton/Hotels/SkeletonHotelDetails";
 import { useAppDispatch, useAppSelector } from "../../Redux/hook";
 import {
   fetchHotelById,
@@ -28,33 +26,76 @@ import {
   updateBookingPayload,
   updateHotelDetailId,
 } from "../../Redux/Slice/hotelSlice";
-import SkeletonHotelDetails from "../../Components/Skeleton/Hotels/SkeletonHotelDetails";
-import _ from "lodash";
+import { showToast } from "../../Utils/toast";
 
 const HotelDetails = ({ navigation, route }) => {
+  // Lấy hotelId và item từ route params (truyền từ trang trước)
   const hotelId = route?.params?.item?.hotelId;
   const item = route?.params?.item;
 
-  const [css, setCss] = useState(1);
-  const Tab = createMaterialTopTabNavigator();
+  const [css, setCss] = useState(1); // State để quản lý tab hiện tại (Price/Photo/Check)
+  const Tab = createMaterialTopTabNavigator(); // Khởi tạo Top Tab Navigator
 
-  const [data, setData] = useState();
-  const [openMap, setOpenMap] = useState(true);
   const dispatch = useAppDispatch();
-  const { hotelList, hotelDetail, loading, error, inforFilter } =
-    useAppSelector((state) => state.hotel);
+  const { hotelDetail, loadingHD, errorHD, inforFilter } = useAppSelector(
+    (state) => state.hotel
+  ); // Lấy dữ liệu từ Redux store
 
-  console.log(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>..", hotelDetail);
-  // console.log(">>> 48 HD >>>", hotelDetail?.review?.feedback?.comments);
+  // Hàm gọi API fetchHotelById với retry mechanism
+  const fetchHotelDetails = async (retryCount = 2, delay = 1000) => {
+    for (let attempt = 1; attempt <= retryCount; attempt++) {
+      try {
+        await dispatch(fetchHotelById(hotelId)).unwrap();
+        return;
+      } catch (error) {
+        console.error(
+          `Attempt ${attempt} failed to fetch hotel details:`,
+          error
+        );
+        showToast({
+          type: "error",
+          text1: "Lỗi tải dữ liệu",
+          text2: "Không thể tải chi tiết khách sạn.",
+          position: "top-right",
+          duration: 3000,
+        });
+        if (attempt === retryCount) {
+          throw error;
+        }
+        await new Promise((resolve) => setTimeout(resolve, delay));
+      }
+    }
+  };
 
+  // Hàm gọi tất cả API cần thiết khi trang mount
+  const fetchData = async () => {
+    try {
+      await fetchHotelDetails();
+    } catch (error) {
+      console.error("Failed to fetch data in HotelDetails:", error);
+      showToast({
+        type: "error",
+        text1: "Lỗi tải dữ liệu",
+        text2: "Không thể tải chi tiết khách sạn.",
+        position: "top-right",
+        duration: 3000,
+      });
+    }
+  };
+
+  // Gọi API khi component mount
   useEffect(() => {
-    const routeName = navigation.getState()?.routes[0]?.state?.routes[0]?.name;
-    if (routeName === "Price") setCss(1);
-    else if (routeName === "Photo") setCss(2);
-    else if (routeName === "Check") setCss(3);
-  }, [navigation]);
+    fetchData();
+  }, [dispatch]);
 
+  // Hàm xử lý khi nhấn nút "Thử lại" (gọi lại API nếu có lỗi)
+  const handleRetry = () => {
+    fetchData();
+  };
+
+  // Hàm xử lý khi nhấn nút "Đặt ngay"
   const handleInfoConfirm = () => {
+    // Tạo object inforFilter_ chứa thông tin đặt phòng
     const inforFilter_ = {
       hotelId: hotelId,
       checkInDate: inforFilter.checkin,
@@ -63,8 +104,8 @@ const HotelDetails = ({ navigation, route }) => {
       adults: inforFilter.adults,
       children: inforFilter.children,
     };
-    // console.log(inforFilter_);
 
+    // Tạo bookingPayload để gửi lên server khi đặt phòng
     const bookingPayload = {
       customerName: "",
       customerEmail: "",
@@ -76,20 +117,24 @@ const HotelDetails = ({ navigation, route }) => {
       roomRequestList: [],
     };
 
+    // Cập nhật bookingPayload và hotelDetailId vào Redux store
     dispatch(updateBookingPayload(bookingPayload));
-
-    // console.log("id", hotelId);
     dispatch(updateHotelDetailId(hotelId));
+
+    // Gọi API để lấy danh sách phòng của khách sạn
     dispatch(fetchHotelRoomList(inforFilter_));
 
+    // Điều hướng đến trang HotelRoomList để chọn phòng
     navigation.navigate("HotelRoomList", { item });
   };
 
-  const handleOrderConfirm = () => {
-    setShowInfoConfirm(false);
-    setShowOrderConfirm(true);
+  // Hàm xử lý khi nhấn nút "Vị trí" (mở Google Maps)
+  const handleMapLocation = () => {
+    // Dispatch action để mở Google Maps với vị trí khách sạn
+    dispatch(mapOpenClose(true));
   };
 
+  // Component tùy chỉnh cho thanh tab (Price/Photo/Check)
   const CustomTabBar = ({ state, descriptors, navigation }) => {
     return (
       <View style={styles.header__tabs}>
@@ -97,18 +142,13 @@ const HotelDetails = ({ navigation, route }) => {
           style={[
             styles.header__tab,
             styles.header__tab__1,
-            // css === 1 && styles.active,
             state.index === 0 && styles.active,
           ]}
-          onPress={() => {
-            // setCss(1);
-            navigation.navigate("Price");
-          }}
+          onPress={() => navigation.navigate("Price")} // Điều hướng đến tab Price
         >
           <Text
             style={[
               styles.header__tab__text,
-              // css === 1 && styles.activeText,
               state.index === 0 && styles.activeText,
             ]}
           >
@@ -116,20 +156,12 @@ const HotelDetails = ({ navigation, route }) => {
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[
-            styles.header__tab,
-            // css === 2 && styles.active,
-            state.index === 1 && styles.active,
-          ]}
-          onPress={() => {
-            // setCss(2);
-            navigation.navigate("Photo");
-          }}
+          style={[styles.header__tab, state.index === 1 && styles.active]}
+          onPress={() => navigation.navigate("Photo")} // Điều hướng đến tab Photo
         >
           <Text
             style={[
               styles.header__tab__text,
-              // css === 2 && styles.activeText,
               state.index === 1 && styles.activeText,
             ]}
           >
@@ -140,18 +172,13 @@ const HotelDetails = ({ navigation, route }) => {
           style={[
             styles.header__tab,
             styles.header__tab__3,
-            // css === 3 && styles.active,
             state.index === 2 && styles.active,
           ]}
-          onPress={() => {
-            // setCss(3);
-            navigation.navigate("Check");
-          }}
+          onPress={() => navigation.navigate("Check")} // Điều hướng đến tab Check
         >
           <Text
             style={[
               styles.header__tab__text,
-              // css === 3 && styles.activeText,
               state.index === 2 && styles.activeText,
             ]}
           >
@@ -162,112 +189,116 @@ const HotelDetails = ({ navigation, route }) => {
     );
   };
 
-  const handleMapLocation = () => {
-    dispatch(mapOpenClose(true));
-  };
-
-  if (loading) {
+  // Nếu đang loading, hiển thị skeleton
+  if (loadingHD) {
     return <SkeletonHotelDetails />;
   }
 
-  return (
-    <>
-      <View style={styles.container}>
-        {/* Header */}
-        <View style={styles.header}>
-          <ImageBackground
-            source={{
-              uri: `${item?.imageUrl}`,
-            }}
-            style={styles.header__image}
-          >
-            <View style={styles.header__overlay}>
-              <TouchableOpacity onPress={() => navigation.goBack()}>
-                <Ionicons name="arrow-back" size={24} color="#fff" />
-              </TouchableOpacity>
-              <Text style={styles.header__title}>{item?.hotelName}</Text>
-              {/* <TouchableOpacity style={styles.header__icon__start}>
-                <Ionicons name="share-outline" size={24} color="#fff" />
-              </TouchableOpacity> */}
-            </View>
+  // Nếu có lỗi, hiển thị giao diện lỗi với nút "Thử lại"
+  if (errorHD) {
+    return (
+      <View style={styles.sectionErorHL}>
+        <TouchableOpacity style={styles.errorHL} onPress={() => handleRetry()}>
+          <Text style={styles.errorHLText}>Thử lại </Text>
+        </TouchableOpacity>
+      </View>
+      // <View style={styles.errorContainer}>
+      //   <Text style={styles.errorText}>Lỗi: {errorHD}</Text>
+      //   <TouchableOpacity style={styles.retryButton} onPress={handleRetry}>
+      //     <Text style={styles.retryButtonText}>Thử lại</Text>
+      //   </TouchableOpacity>
+      // </View>
+    );
+  }
 
-            <View style={styles.header__info}>
-              <View style={styles.header__rating}>
-                <View style={styles.header__rating__group}>
-                  <View>
-                    <Icon
-                      style={styles.iconStart}
-                      name="star"
-                      size={24}
-                      color="#EBA731"
-                    />
-                  </View>
-                  <View>
-                    <Text style={styles.header__rating__score}>
-                      {hotelDetail && hotelDetail?.review.rating}
-                    </Text>
-                  </View>
-                </View>
-                <Text style={styles.header__rating__text}>
-                  {hotelDetail && hotelDetail?.review?.sumReview} Người đã thích
+  return (
+    <View style={styles.container}>
+      {/* Header */}
+      <View style={styles.header}>
+        <ImageBackground
+          source={{
+            uri: `${item?.imageUrl}`,
+          }}
+          style={styles.header__image}
+        >
+          <View style={styles.header__overlay}>
+            <TouchableOpacity onPress={() => navigation.goBack()}>
+              <Ionicons name="arrow-back" size={24} color="#fff" />
+            </TouchableOpacity>
+            <Text style={styles.header__title}>{item?.hotelName}</Text>
+          </View>
+
+          <View style={styles.header__info}>
+            <View style={styles.header__rating}>
+              <View style={styles.header__rating__group}>
+                <Icon
+                  style={styles.iconStart}
+                  name="star"
+                  size={24}
+                  color="#EBA731"
+                />
+                <Text style={styles.header__rating__score}>
+                  {hotelDetail?.review?.rating || "N/A"}
                 </Text>
               </View>
-              <TouchableOpacity
-                style={styles.header__location}
-                onPress={() => handleMapLocation()}
-              >
-                <View>
-                  <Icon name="map-marker" size={16} color="white" />
-                </View>
-                <View style={styles.header__location__text}>
-                  <Text style={{ color: "white" }}>
-                    {hotelDetail && hotelDetail?.review?.location}
-                  </Text>
-                </View>
-              </TouchableOpacity>
+              <Text style={styles.header__rating__text}>
+                {`${hotelDetail?.review?.sumReview || 0} Người đã thích`}
+              </Text>
             </View>
-          </ImageBackground>
-        </View>
-
-        {/* Tab Navigator với tabBar tùy chỉnh */}
-
-        <Tab.Navigator
-          tabBar={(props) => <CustomTabBar {...props} />}
-          initialRouteName="Price"
-        >
-          <Tab.Screen
-            name="Price"
-            component={PriceScreen}
-            options={{ tabBarLabel: "Bảng giá" }}
-          />
-          <Tab.Screen
-            name="Photo"
-            component={PhotoScreen}
-            options={{ tabBarLabel: "Ảnh" }}
-          />
-          <Tab.Screen
-            name="Check"
-            component={CheckScreen}
-            options={{ tabBarLabel: "Lần check" }}
-          />
-        </Tab.Navigator>
-
-        <View style={styles.footer__action}>
-          <Text style={styles.footer__price}>
-            <Text>{hotelDetail && hotelDetail.priceMin}</Text>
-            <Text style={styles.footer__price__text}>TB/ĐÊM</Text>
-          </Text>
-          <TouchableOpacity
-            style={styles.footer__button}
-            onPress={() => handleInfoConfirm()}
-          >
-            <Text style={styles.footer__button__text}>ĐẶT NGAY</Text>
-          </TouchableOpacity>
-        </View>
+            <TouchableOpacity
+              style={styles.header__location}
+              onPress={handleMapLocation}
+            >
+              <Icon name="map-marker" size={16} color="white" />
+              <View style={styles.header__location__text}>
+                <Text style={{ color: "white" }}>
+                  {hotelDetail?.review?.location || "Không có thông tin"}
+                </Text>
+              </View>
+            </TouchableOpacity>
+          </View>
+        </ImageBackground>
       </View>
-    </>
+
+      {/* Tab Navigator với tabBar tùy chỉnh */}
+      <Tab.Navigator
+        tabBar={(props) => <CustomTabBar {...props} />}
+        initialRouteName="Price"
+      >
+        <Tab.Screen
+          name="Price"
+          component={PriceScreen}
+          options={{ tabBarLabel: "Bảng giá" }}
+        />
+        <Tab.Screen
+          name="Photo"
+          component={PhotoScreen}
+          options={{ tabBarLabel: "Ảnh" }}
+        />
+        <Tab.Screen
+          name="Check"
+          component={CheckScreen}
+          options={{ tabBarLabel: "Lần check" }}
+        />
+      </Tab.Navigator>
+
+      {/* Footer với giá và nút "Đặt ngay" */}
+      <View style={styles.footer__action}>
+        <Text style={styles.footer__price}>
+          <Text>{hotelDetail?.priceMin || "N/A"}</Text>
+          <Text style={styles.footer__price__text}>TB/ĐÊM</Text>
+        </Text>
+        <TouchableOpacity
+          style={styles.footer__button}
+          onPress={handleInfoConfirm}
+        >
+          <Text style={styles.footer__button__text}>ĐẶT NGAY</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
   );
 };
+
 export default HotelDetails;
 const styles = StyleSheet.create({
   container: {
@@ -488,6 +519,25 @@ const styles = StyleSheet.create({
     width: 100,
     height: 20,
     borderRadius: 4,
+  },
+  sectionErorHL: {
+    justifyContent: "center",
+    alignItems: "center",
+    height: 100,
+    backgroundColor: "white",
+  },
+  errorHL: {
+    backgroundColor: "white",
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "gray",
+    padding: 20,
+    paddingVertical: 10,
+  },
+  errorHLText: {
+    color: "gray",
+    fontSize: 16,
+    fontWeight: "400",
   },
 });
 

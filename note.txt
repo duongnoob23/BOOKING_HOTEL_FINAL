@@ -509,3 +509,48 @@ lỗi này là khi ta cố tình thay đổi giá trị của một biến khi k
 -----------------------------------Lỗi bàn phím bị đẩy lên trong expo go-------------------------------
 trong file app.json thêm phần sau vào android 
 "softwareKeyboardLayoutMode": "pan",
+
+
+-------------------------------Lỗi nguyên nhân lỗi "createNode of null"-------------------------
+xử dụng thư viện khác ngoài các thư viện motiview trong phần skeleton, tạm thời lỗi là thế
+
+
+-----------------------------Lỗi xampp start mysql không lên------------------------------
+1. copy thư mục data để nếu sai còn có cái backup
+2. trong thư mục data xóa toàn bộ thư mục trong data ngoại trừ ibdata và các dữ liệu ví dụ booking webShoes...
+3. vào file backUp copy toàn bộ và dán lại vào trong data 
+4. ctrl + s và chạy như bth
+
+
+5. trong trường hợp mà làm như trên bị mất dữ liệu thì nên tải lại xampp ,nếu tải lại, vẫn bị như trên => khả năng do 3306 của mysql bị chiếm
+
+các bước thay đổi port cho xampp 
+5.1 ấn vào config của mysql -> chọn my.ini sửa 
+
+    [client]
+port=3307
+socket="C:/xampp/mysql/mysql.sock"
+
+[mysqld]
+port=3307
+socket="C:/xampp/mysql/mysql.sock"
+
+Mở file C:\xampp\php\php.ini.
+Tìm dòng:
+mysqli.default_port = 3306
+và thay thành:
+mysqli.default_port = 3307
+
+Mở file C:\xampp\phpMyAdmin\config.inc.php.
+Tìm dòng:
+$cfg['Servers'][$i]['port'] = '3306';
+và thay thành:
+$cfg['Servers'][$i]['port'] = '3307';
+
+Nếu không thấy dòng $cfg['Servers'][$i]['port'], hãy thêm vào dưới dòng $cfg['Servers'][$i]['host'] = 'localhost';:
+$cfg['Servers'][$i]['port'] = '3307';
+
+
+
+------------------------------------------------------------------------------Lỗi mất button apache ko bật đc -----------------------------------------------------------------
+nguyên nhân là do mất file httpd.exe hình lông chim tím bên trong file c/xampp/apache/bin 

@@ -1,36 +1,59 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, Modal } from "react-native";
-import { Calendar } from "react-native-calendars"; // Import Calendar từ react-native-calendars
+import { Calendar } from "react-native-calendars";
 import showToast from "../../../Utils/toast";
+import { useAppSelector } from "../../../Redux/hook";
+
 const ModalDatePicker = ({
   visible,
   onClose,
   onConfirm,
   title = "Chọn ngày",
-  initialDate,
-  mode = "checkin",
+  mode,
 }) => {
-  console.log(`1 ${mode}`, initialDate);
-  // Chuyển initialDate thành định dạng YYYY-MM-DD để react-native-calendars sử dụng
-  const initialDateString =
-    initialDate.toISOString().split("T")[0] || new Date();
-  const [selectedDate, setSelectedDate] = useState(initialDateString);
+  const { inforFilter } = useAppSelector((state) => state.hotel);
+  console.log(`1 ${mode}`, inforFilter[mode]);
+
+  // Khởi tạo selectedDate từ inforFilter[mode], hoặc ngày hiện tại nếu không có giá trị
+  const [selectedDate, setSelectedDate] = useState(
+    inforFilter[mode] || new Date().toISOString().split("T")[0]
+  );
+
+  // Reset selectedDate khi modal mở (visible thay đổi thành true)
+  useEffect(() => {
+    if (visible) {
+      setSelectedDate(
+        inforFilter[mode] || new Date().toISOString().split("T")[0]
+      );
+    }
+  }, [visible, inforFilter[mode]]);
 
   const handleDayPress = (day) => {
+    console.log("10", day.dateString);
     setSelectedDate(day.dateString); // Lưu ngày được chọn dưới dạng YYYY-MM-DD
   };
 
   const handleConfirm = () => {
-    const date = new Date(selectedDate); // Chuyển chuỗi YYYY-MM-DD thành đối tượng Date
-    onConfirm(mode, date); // Gọi hàm onConfirm với mode và ngày đã chọn
-    // showToast({
-    //   type: "warning", // hoặc "error", "info"
-    //   text1: "Chọn lại ngày checkin",
-    //   text2: "Ngày CheckIn phải lớn hơn hoặc bằng ngày hiện tại",
-    //   position: "top-right",
-    //   duration: 3000,
-    // });
-    // onClose();
+    const date = new Date(`${selectedDate}T00:00:00.000Z`); // tạo ngày với giờ đằng sau chính xác, không bị lùi giờ theo mốc việt nam
+    console.log("11", date);
+
+    // Gọi onConfirm và truyền callback để reset selectedDate nếu validate thất bại
+    onConfirm(mode, date, (isValid) => {
+      if (!isValid) {
+        // Nếu validate thất bại, reset selectedDate về giá trị gốc
+        setSelectedDate(
+          inforFilter[mode] || new Date().toISOString().split("T")[0]
+        );
+      }
+    });
+  };
+
+  const handleCancel = () => {
+    // Khi bấm Hủy, reset selectedDate về giá trị gốc
+    setSelectedDate(
+      inforFilter[mode] || new Date().toISOString().split("T")[0]
+    ); // nếu chọn ngày mà huy thì reset lại giá trị ngày chọn ban đầu
+    onClose();
   };
 
   return (
@@ -46,9 +69,8 @@ const ModalDatePicker = ({
         <View style={styles.modalContainer}>
           <Text style={styles.modalTitle}>{title}</Text>
 
-          {/* Sử dụng Calendar từ react-native-calendars */}
           <Calendar
-            current={initialDateString} // Ngày hiện tại
+            current={inforFilter[mode]} // Ngày hiện tại
             minDate={new Date().toISOString().split("T")[0]} // Không cho phép chọn ngày trước hôm nay
             onDayPress={handleDayPress} // Xử lý khi người dùng chọn ngày
             markedDates={{
@@ -58,23 +80,23 @@ const ModalDatePicker = ({
               },
             }} // Đánh dấu ngày đã chọn
             theme={{
-              todayTextColor: "#FF6347", // Màu cho ngày hôm nay
-              arrowColor: "#0090FF", // Màu mũi tên chuyển tháng
-              monthTextColor: "#333", // Màu tiêu đề tháng
+              todayTextColor: "#FF6347",
+              arrowColor: "#0090FF",
+              monthTextColor: "#333",
               textDayFontSize: 16,
               textMonthFontSize: 16,
               textDayHeaderFontSize: 16,
             }}
           />
-
-          {/* Hiển thị ngày đã chọn */}
           <Text style={styles.selectedDateText}>
-            Ngày đã chọn: {new Date(selectedDate).toLocaleDateString("vi-VN")}
+            Ngày đã chọn:{" "}
+            {new Date(`${selectedDate}T00:00:00.000+07:00`).toLocaleDateString(
+              "vi-VN"
+            )}
           </Text>
 
-          {/* Nút Hủy và Xác nhận */}
           <View style={styles.modalButtons}>
-            <TouchableOpacity style={styles.modalButton} onPress={onClose}>
+            <TouchableOpacity style={styles.modalButton} onPress={handleCancel}>
               <Text style={styles.modalButtonText}>Hủy</Text>
             </TouchableOpacity>
             <TouchableOpacity

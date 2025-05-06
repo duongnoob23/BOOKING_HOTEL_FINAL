@@ -24,6 +24,8 @@ import {
   fetchServiceList,
   updateTempFilter,
   applyFilter,
+  changeCheckOutDate,
+  changeCheckInDate,
 } from "../../Redux/Slice/hotelSlice";
 import ModalLocationList from "../../Components/Modal/Home/ModalLocationList";
 import cloneDeep from "lodash/cloneDeep";
@@ -57,7 +59,7 @@ const HomeScreen = ({ navigation }) => {
   } = useAppSelector((state) => state.hotel); // lấy thông tin danh sách tìm kiếm sau khi search, danh sách ưu đãi cuối tuần, lịch sử tìm kiếm
   const dispatch = useAppDispatch();
 
-  console.log("3 ", hotelList);
+  // console.log("3 ", hotelList);
 
   const [open, setOpen] = useState({
     Modal_1: false,
@@ -65,8 +67,6 @@ const HomeScreen = ({ navigation }) => {
     Modal_CheckOut: false,
     Modal_GuestsAndRooms: false,
   }); // Modal đóng mở 4 chức năng tìm kiếm
-  const [checkInDate, setCheckInDate] = useState(new Date());
-  const [checkOutDate, setCheckOutDate] = useState(new Date());
 
   const continueSearch = hotelHistorySearch; // biến lưu dữ liệu danh sách tìm kiếm
 
@@ -142,6 +142,7 @@ const HomeScreen = ({ navigation }) => {
   const handleToHotelDetails = (item) => {
     if (item && item !== "") {
       navigation.navigate("HotelDetails", { item });
+      console.log("1");
     } else {
       showToast({
         type: "error",
@@ -177,14 +178,29 @@ const HomeScreen = ({ navigation }) => {
   }; // chuẩn hóa ngày tháng năm hiển thì YYYY-MM-DD
 
   const normalizeDate = (date) => {
-    return new Date(date.getFullYear(), date.getMonth(), date.getDate());
-  }; // chuẩn hóa về ngày tháng năm, không có giờ để tiện so sánh (do việt nam bị lệch múi giờ)
+    console.log();
+    // Lấy ngày, tháng, năm theo múi giờ địa phương (UTC+7)
+    const year = date.getFullYear();
+    const month = date.getMonth();
+    const day = date.getDate();
 
-  const handleConfirmDate = (name, date) => {
+    // Tạo ngày mới với múi giờ Việt Nam (UTC+7)
+    const vietnamDate = new Date(
+      `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(
+        2,
+        "0"
+      )}T00:00:00.000+07:00`
+    );
+    return vietnamDate;
+  };
+
+  const handleConfirmDate = (name, date, onValidationResult) => {
     // Chuẩn hóa date và today để bỏ qua giờ/phút/giây
-    date = normalizeDate(date);
+    console.log("12.1", date);
+    // date = normalizeDate(date);
     const today = normalizeDate(new Date());
-
+    console.log("12", date);
+    console.log("12.2", today);
     // 0. Nếu là checkin
     if (name === "checkin") {
       // 1. So sánh: ngày check-in không được nhỏ hơn ngày hiện tại
@@ -196,63 +212,35 @@ const HomeScreen = ({ navigation }) => {
           position: "top-right",
           duration: 3000,
         });
+        onValidationResult(false);
         // Alert.alert("Ngày CheckIn phải lớn hơn hoặc bằng ngày hiện tại");
         return;
       }
 
       // Format ngày check-in để lưu vào inforFilter
-      const formattedCheckInDate = formatToDDMMYYYY(date);
-
       // 2. Kiểm tra ngày check-out
-      setCheckInDate(date);
-      let updatedFilter = { ...inforFilter, checkin: formattedCheckInDate };
+      dispatch(changeCheckInDate(date.toISOString()));
 
-      if (inforFilter?.checkout && inforFilter.checkout !== "") {
+      if (inforFilter?.checkOutDate && inforFilter?.checkOutDate !== "") {
         // Đã có check-out, chuyển check-out thành Date để so sánh
-        const checkoutParts = inforFilter.checkout.split("-"); // "DD-MM-YYYY" => ["DD", "MM", "YYYY"]
-        if (checkoutParts.length === 3) {
-          // Đảm bảo có đủ 3 phần tử
-          const checkoutDay = parseInt(checkoutParts[2]);
-          const checkoutMonth = parseInt(checkoutParts[1]) - 1;
-          const checkoutYear = parseInt(checkoutParts[0]);
+        const checkOutDate = new Date(inforFilter?.checkOutDate);
 
-          if (
-            !isNaN(checkoutYear) &&
-            !isNaN(checkoutMonth) &&
-            !isNaN(checkoutDay)
-          ) {
-            const checkoutDate = new Date(
-              checkoutYear,
-              checkoutMonth,
-              checkoutDay
-            );
-            // console.log("-2", checkoutParts);
-            // console.log("-1", checkoutDate);
-
-            // 3. Nếu check-out nhỏ hơn hoặc bằng check-in, đặt check-out = check-in + 1
-            if (checkoutDate <= date) {
-              // console.log("kiểm tra ngày checkout ", checkoutDate);
-              // console.log("kiểm tra ngày date ", date);
-              const nextDay = new Date(date);
-              nextDay.setDate(date.getDate() + 1);
-              updatedFilter.checkout = formatToDDMMYYYY(nextDay);
-              setCheckOutDate(nextDay);
-            }
-            // Nếu check-out lớn hơn check-in, giữ nguyên
-          } else {
-            console.log("Dữ liệu checkout không hợp lệ:", checkoutParts);
-          }
+        if (checkOutDate <= date) {
+          const nextDay = new Date(date);
+          nextDay.setDate(date.getDate() + 1);
+          dispatch(changeCheckOutDate(nextDay.toISOString()));
         }
       } else {
         // 3. Chưa có check-out, đặt check-out = check-in + 1
         const nextDay = new Date(date);
+        // nextDay.setDate(nextDay.getDate() + 1);
+        // currentDay.setDate(currentDay.getDate() + 1);
         nextDay.setDate(date.getDate() + 1);
-        updatedFilter.checkout = formatToDDMMYYYY(nextDay);
-        setCheckOutDate(nextDay);
+        // updatedFilter.checkout = formatToDDMMYYYY(nextDay);
+        dispatch(changeCheckOutDate(nextDay.toISOString()));
       }
 
       // Cập nhật filter vào Redux
-      dispatch(updateFilter(updatedFilter));
       handleModalCheck("Modal_CheckIn", false);
     }
 
@@ -267,64 +255,67 @@ const HomeScreen = ({ navigation }) => {
           position: "top-right",
           duration: 3000,
         });
+        onValidationResult(false);
         // Alert.alert("Ngày CheckOut phải lớn hơn ngày hiện tại");
         return;
       }
-
-      // So sánh: check-out phải lớn hơn check-in
-      if (inforFilter?.checkin && inforFilter.checkin !== "") {
-        const checkinParts = inforFilter.checkin.split("-"); // "DD-MM-YYYY" => ["DD", "MM", "YYYY"]
-        if (checkinParts.length === 3) {
-          // Đảm bảo có đủ 3 phần tử
-          const checkinDay = parseInt(checkinParts[2]);
-          const checkinMonth = parseInt(checkinParts[1]) - 1;
-          const checkinYear = parseInt(checkinParts[0]);
-
-          if (
-            !isNaN(checkinYear) &&
-            !isNaN(checkinMonth) &&
-            !isNaN(checkinDay)
-          ) {
-            const checkinDate = new Date(checkinYear, checkinMonth, checkinDay);
-            // console.log("2", checkinParts);
-            // console.log("3", checkinDate);
-
-            if (date <= checkinDate) {
-              showToast({
-                type: "warning", // hoặc "error", "info"
-                text1: "Chọn lại ngày checkout",
-                text2: "Ngày CheckOut phải lớn hơn ngày CheckIn",
-                position: "top-right",
-                duration: 3000,
-              });
-              // Alert.alert("Ngày CheckOut phải lớn hơn ngày CheckIn");
-              return;
-            }
-          } else {
-            console.log("Dữ liệu checkin không hợp lệ:", checkinParts);
-          }
+      if (
+        inforFilter?.checkin &&
+        inforFilter?.checkin !== "" &&
+        inforFilter?.checkInDate &&
+        inforFilter?.checkInDate !== ""
+      ) {
+        const checkInDate = new Date(inforFilter?.checkInDate);
+        if (date <= checkInDate) {
+          showToast({
+            type: "warning", // hoặc "error", "info"
+            text1: "Chọn lại ngày checkout",
+            text2: "Ngày CheckOut phải lớn hơn ngày CheckIn",
+            position: "top-right",
+            duration: 3000,
+          });
+          onValidationResult(false);
+          // Alert.alert("Ngày CheckOut phải lớn hơn ngày CheckIn");
+          return;
         }
       }
 
+      console.log("13", date);
       // Format ngày check-out để lưu vào inforFilter
-      setCheckOutDate(date);
-      const formattedCheckOutDate = formatToDDMMYYYY(date);
-
+      // changeCheckOutDate(date);
+      dispatch(changeCheckOutDate(date.toISOString()));
+      console.log("6", date.toISOString());
       // Cập nhật filter vào Redux
-      dispatch(
-        updateFilter({ ...inforFilter, checkout: formattedCheckOutDate })
-      );
+      // dispatch(
+      //   updateFilter({ ...inforFilter, checkout: formattedCheckOutDate })
+      // );
+      onValidationResult(true);
       handleModalCheck("Modal_CheckOut", false);
     }
   };
 
   const handleFilterHotel = () => {
+    if (+inforFilter?.locationId === 0) {
+      showToast({
+        type: "warning", // hoặc "error", "info"
+        text1: "Thiếu địa điểm ",
+        text2: "Vui lòng chọn địa điểm!",
+        position: "top-right",
+        duration: 3000,
+      });
+      return;
+    }
+    const currentDay = new Date();
+    const nextDay = new Date();
+    nextDay.setDate(currentDay.getDate() + 1);
+    console.log("15", currentDay, nextDay);
+    dispatch(changeCheckInDate(currentDay.toISOString()));
+    dispatch(changeCheckOutDate(nextDay.toISOString()));
     dispatch(skeletonLoading());
-    // dispatch(fetchHotelByLocation(inforFilter));
-    // console.log(">>> run 0");
     navigation.navigate("ListHotelLocation");
   }; // hàm gọi ListHotelByLocation search từ nút tìm kiếm
-
+  // NOTE CÒN HÀM NÀY XỬ LÝ CUỐI CÙNG
+  console.log("2", inforFilter);
   const handleContinueSearch = (item) => {
     // console.log(item);
     const inforFilter_ = {
@@ -467,7 +458,6 @@ const HomeScreen = ({ navigation }) => {
           onClose={() => handleCloseModal("Modal_CheckIn")}
           onConfirm={handleConfirmDate}
           title="Chọn ngày nhận phòng"
-          initialDate={checkInDate}
           mode="checkin"
         />
 
@@ -476,7 +466,6 @@ const HomeScreen = ({ navigation }) => {
           onClose={() => handleCloseModal("Modal_CheckOut")}
           onConfirm={handleConfirmDate}
           title="Chọn ngày trả phòng"
-          initialDate={checkOutDate}
           mode="checkout"
         />
 

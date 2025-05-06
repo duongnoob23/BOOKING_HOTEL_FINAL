@@ -65,3 +65,6 @@ tree /f /a > directory_structure.txt
 
  Get-ChildItem -Recurse -Include *.js,*.jsx,*.ts,*.tsx,*.json -Exclude node_modules,.git | ForEach-Object { "===== $($_.FullName) ====="; Get-Content $_.FullName } > project_code.txt
  * lệnh gom các file code trong thư mục
+
+project_code.txt: tính năng phân tách, đóng gói, gấp, codelens, làm nổi bật từ và cuộn cố định đã bị tắt đối với tệp lớn này để giảm mức sử dụng bộ nhớ và tránh đóng băng hoặc sập.
+

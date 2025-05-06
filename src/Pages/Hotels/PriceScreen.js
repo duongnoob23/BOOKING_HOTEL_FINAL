@@ -24,8 +24,14 @@ import * as Progress from "react-native-progress";
 import ModalCheckIn from "../../Components/Modal/Home/ModalCheckIn";
 import ModalCheckOut from "../../Components/Modal/Home/ModalCheckOut";
 import ModalGuestsAndRooms from "../../Components/Modal/Home/ModalGuestsAndRooms";
-import { getReviewDetails, updateFilter } from "../../Redux/Slice/hotelSlice";
-
+import {
+  changeCheckInDate,
+  changeCheckOutDate,
+  getReviewDetails,
+  updateFilter,
+} from "../../Redux/Slice/hotelSlice";
+import ModalDatePicker from "../../Components/Modal/Home/ModalDatePicker";
+import { showToast } from "../../Utils/toast";
 const PriceScreen = ({ navigation, route }) => {
   const {
     hotelList,
@@ -36,6 +42,7 @@ const PriceScreen = ({ navigation, route }) => {
     hotelByLocation,
     inforFilter,
   } = useAppSelector((state) => state.hotel);
+  const dispatch = useAppDispatch();
 
   const [open, setOpen] = useState({
     Modal_1: true,
@@ -44,14 +51,6 @@ const PriceScreen = ({ navigation, route }) => {
     Modal_GuestsAndRooms: false,
   });
 
-  const handleOrderFood = () => {
-    navigation.navigate("OrderFood");
-  };
-
-  const handleToFoodDetail = () => {
-    navigation.navigate("FoodDetails");
-  };
-  const dispatch = useAppDispatch();
   const ratingPercentages = [
     {
       star: 5,
@@ -123,24 +122,6 @@ const PriceScreen = ({ navigation, route }) => {
     return stars;
   };
 
-  const [selectDay, setSelectDay] = useState({
-    day: 4,
-    month: 4,
-    year: 2025,
-  });
-  const formatToYYYYMMDD = (date) => {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const day = String(date.getDate()).padStart(2, "0");
-    return `${year}-${month}-${day}`;
-  };
-
-  const handleOpenModal = (name) => {
-    const open_ = cloneDeep(open);
-    open_[name] = true;
-    setOpen(open_);
-  };
-
   const handleCloseModal = (name) => {
     const open_ = cloneDeep(open);
     open_[name] = false;
@@ -150,53 +131,131 @@ const PriceScreen = ({ navigation, route }) => {
   const handleModalCheck = (name, value) => {
     const open_ = cloneDeep(open);
     open_[name] = value;
-
-    if (name === "Modal_CheckIn" || name === "Modal_CheckOut") {
-      const day =
-        inforFilter[name === "Modal_CheckIn" ? "checkin" : "checkout"];
-      setSelectDay({
-        day: +day.split("-")[2],
-        month: +day.split("-")[1],
-        year: +day.split("-")[0],
-      });
-    }
-
     setOpen(open_);
+  }; // Hàm mở modal , với các modal chọn thời gian thì cần phải set lại thời gian hiển thị
+
+  const formatToDDMMYYYY = (date) => {
+    const day = String(date.getDate()).padStart(2, "0");
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const year = date.getFullYear();
+    return `${year}-${month}-${day}`;
+  }; // chuẩn hóa ngày tháng năm hiển thì YYYY-MM-DD
+
+  const normalizeDate = (date) => {
+    console.log();
+    // Lấy ngày, tháng, năm theo múi giờ địa phương (UTC+7)
+    const year = date.getFullYear();
+    const month = date.getMonth();
+    const day = date.getDate();
+
+    // Tạo ngày mới với múi giờ Việt Nam (UTC+7)
+    const vietnamDate = new Date(
+      `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(
+        2,
+        "0"
+      )}T00:00:00.000+07:00`
+    );
+    return vietnamDate;
   };
 
-  const handleConfirmDate = (name) => {
-    const formattedDate = `${selectDay.year}-${String(selectDay.month).padStart(
-      2,
-      "0"
-    )}-${String(selectDay.day).padStart(2, "0")}`;
-
-    console.log(selectDay);
+  const handleConfirmDate = (name, date, onValidationResult) => {
+    // Chuẩn hóa date và today để bỏ qua giờ/phút/giây
+    console.log("12.1", date);
+    // date = normalizeDate(date);
+    const today = normalizeDate(new Date());
+    console.log("12", date);
+    console.log("12.2", today);
+    // 0. Nếu là checkin
     if (name === "checkin") {
-      const today = new Date();
+      // 1. So sánh: ngày check-in không được nhỏ hơn ngày hiện tại
+      if (date <= today) {
+        showToast({
+          type: "warning", // hoặc "error", "info"
+          text1: "Chọn lại ngày checkin",
+          text2: "Ngày CheckIn phải lớn hơn hoặc bằng ngày hiện tại",
+          position: "top-right",
+          duration: 3000,
+        });
+        onValidationResult(false);
+        // Alert.alert("Ngày CheckIn phải lớn hơn hoặc bằng ngày hiện tại");
+        return;
+      }
 
-      const dateToday = formatToYYYYMMDD(today);
-      const date1 = new Date(dateToday);
-      const date2 = new Date(formattedDate);
-      if (date2 < date1) {
-        Alert.alert("Ngày CheckIn phải lớn hơn ngày hiện tại");
-        return;
+      // Format ngày check-in để lưu vào inforFilter
+      // 2. Kiểm tra ngày check-out
+      dispatch(changeCheckInDate(date.toISOString()));
+
+      if (inforFilter?.checkOutDate && inforFilter?.checkOutDate !== "") {
+        // Đã có check-out, chuyển check-out thành Date để so sánh
+        const checkOutDate = new Date(inforFilter?.checkOutDate);
+
+        if (checkOutDate <= date) {
+          const nextDay = new Date(date);
+          nextDay.setDate(date.getDate() + 1);
+          dispatch(changeCheckOutDate(nextDay.toISOString()));
+        }
+      } else {
+        // 3. Chưa có check-out, đặt check-out = check-in + 1
+        const nextDay = new Date(date);
+        // nextDay.setDate(nextDay.getDate() + 1);
+        // currentDay.setDate(currentDay.getDate() + 1);
+        nextDay.setDate(date.getDate() + 1);
+        // updatedFilter.checkout = formatToDDMMYYYY(nextDay);
+        dispatch(changeCheckOutDate(nextDay.toISOString()));
       }
-    } else {
-      const date1 = new Date(inforFilter.checkin);
-      const date2 = new Date(formattedDate);
-      // console.log(date1, date2);
-      if (date2 <= date1) {
-        Alert.alert("Ngày CheckOut phải lớn hơn ngày CheckIn");
-        return;
-      }
+
+      // Cập nhật filter vào Redux
+      handleModalCheck("Modal_CheckIn", false);
     }
-    // setInforFilter({
-    //   ...inforFilter,
-    //   [name]: formattedDate,
-    // });
-    dispatch(updateFilter({ ...inforFilter, [name]: formattedDate }));
-    const nameModal = name === "checkin" ? "Modal_CheckIn" : "Modal_CheckOut";
-    handleModalCheck(nameModal, false);
+
+    // 0. Nếu là checkout
+    if (name === "checkout") {
+      // 1. So sánh: check-out không được nhỏ hơn ngày hiện tại
+      if (date <= today) {
+        showToast({
+          type: "warning", // hoặc "error", "info"
+          text1: "Chọn lại ngày checkout",
+          text2: "Ngày CheckOut phải lớn hơn ngày hiện tại",
+          position: "top-right",
+          duration: 3000,
+        });
+        onValidationResult(false);
+        // Alert.alert("Ngày CheckOut phải lớn hơn ngày hiện tại");
+        return;
+      }
+      if (
+        inforFilter?.checkin &&
+        inforFilter?.checkin !== "" &&
+        inforFilter?.checkInDate &&
+        inforFilter?.checkInDate !== ""
+      ) {
+        const checkInDate = new Date(inforFilter?.checkInDate);
+        if (date <= checkInDate) {
+          showToast({
+            type: "warning", // hoặc "error", "info"
+            text1: "Chọn lại ngày checkout",
+            text2: "Ngày CheckOut phải lớn hơn ngày CheckIn",
+            position: "top-right",
+            duration: 3000,
+          });
+          onValidationResult(false);
+          // Alert.alert("Ngày CheckOut phải lớn hơn ngày CheckIn");
+          return;
+        }
+      }
+
+      console.log("13", date);
+      // Format ngày check-out để lưu vào inforFilter
+      // changeCheckOutDate(date);
+      dispatch(changeCheckOutDate(date.toISOString()));
+      console.log("6", date.toISOString());
+      // Cập nhật filter vào Redux
+      // dispatch(
+      //   updateFilter({ ...inforFilter, checkout: formattedCheckOutDate })
+      // );
+      onValidationResult(true);
+      handleModalCheck("Modal_CheckOut", false);
+    }
   };
 
   const handleToRateDetails = (item) => {
@@ -300,8 +359,12 @@ const PriceScreen = ({ navigation, route }) => {
         style={styles.inputContainer}
         onPress={() => handleModalCheck("Modal_CheckIn", true)}
       >
-        <Ionicons name="calendar-outline" size={25} color="#007AFF" />
-        <Text style={styles.inputText}>{inforFilter.checkin}</Text>
+        <Icon name="calendar" size={24} color="#0090FF" />
+        {inforFilter?.checkin === "" ? (
+          <Text style={styles.inputText}>Ngày & giờ nhận phòng</Text>
+        ) : (
+          <Text style={styles.inputText}>{inforFilter?.checkin}</Text>
+        )}
         <Icon
           name="angle-down"
           size={20}
@@ -313,8 +376,13 @@ const PriceScreen = ({ navigation, route }) => {
         style={styles.inputContainer}
         onPress={() => handleModalCheck("Modal_CheckOut", true)}
       >
-        <Ionicons name="calendar-outline" size={25} color="#007AFF" />
-        <Text style={styles.inputText}>{inforFilter.checkout}</Text>
+        <Icon name="calendar" size={24} color="#0090FF" />
+
+        {inforFilter?.checkout !== "" ? (
+          <Text style={styles.inputText}>{inforFilter?.checkout}</Text>
+        ) : (
+          <Text style={styles.inputText}>Ngày & giờ thanh toán</Text>
+        )}
         <Icon
           name="angle-down"
           size={20}
@@ -322,19 +390,19 @@ const PriceScreen = ({ navigation, route }) => {
           style={styles.arrowIcon}
         />
       </TouchableOpacity>
-      <ModalCheckIn
+      <ModalDatePicker
         visible={open.Modal_CheckIn}
-        onClose={handleModalCheck}
-        selectDay={selectDay}
-        setSelectDay={setSelectDay}
-        confirm={handleConfirmDate}
+        onClose={() => handleCloseModal("Modal_CheckIn")}
+        onConfirm={handleConfirmDate}
+        title="Chọn ngày nhận phòng"
+        mode="checkin"
       />
-      <ModalCheckOut
+      <ModalDatePicker
         visible={open.Modal_CheckOut}
-        onClose={handleModalCheck}
-        selectDay={selectDay}
-        setSelectDay={setSelectDay}
-        confirm={handleConfirmDate}
+        onClose={() => handleCloseModal("Modal_CheckOut")}
+        onConfirm={handleConfirmDate}
+        title="Chọn ngày trả phòng"
+        mode="checkout"
       />
       <TouchableOpacity
         style={styles.inputContainer}
@@ -342,7 +410,7 @@ const PriceScreen = ({ navigation, route }) => {
       >
         <Ionicons name="business-outline" size={25} color="#007AFF" />
         <Text style={styles.inputText}>
-          {inforFilter.adults} Người lớn, {inforFilter.children} Trẻ em,{" "}
+          {inforFilter.adults} Người lớn, {inforFilter.children} Trẻ em
           {inforFilter.roomNumber} Phòng
         </Text>
         <Icon
@@ -356,7 +424,6 @@ const PriceScreen = ({ navigation, route }) => {
         visible={open.Modal_GuestsAndRooms}
         onClose={handleModalCheck}
       />
-
       <View style={styles.map}>
         <View style={styles.mapView}>
           <Text style={styles.mapViewTitle}>VỊ TRÍ KHÁCH SẠN</Text>
@@ -372,7 +439,8 @@ const PriceScreen = ({ navigation, route }) => {
           <Text style={[styles.ratings__writeButtonText, { color: "black" }]}>
             Tóm tắt đánh giá
           </Text>
-          <Text style={styles.ratings__writeButtonText}> + VIẾT ĐÁNH GIÁ</Text>
+          {/* <Text style={styles.ratings__writeButtonText}> + VIẾT ĐÁNH GIÁ</Text> */}
+          {/* <Text style={styles.ratings__writeButtonText}></Text> */}
         </View>
         <View style={styles.ratings__stats}>
           {ratingPercentages.map((item) => (
@@ -464,29 +532,6 @@ const PriceScreen = ({ navigation, route }) => {
           </View>
         </View>
 
-        {/* {ratingsData?.map((item, index) => (
-          <TouchableOpacity
-            key={item.reviewId}
-            style={styles.ratings__item}
-            onPress={() => handleToRateDetails(item)}
-          >
-            <Image
-              source={{
-               
-                uri: `${item.urlAvatar}`,
-              }}
-              style={styles.ratings__itemAvatar}
-            />
-            <View style={styles.ratings__itemContent}>
-              <View style={styles.ratings__itemHeader}>
-                <Text style={styles.ratings__itemName}>{item.username}</Text>
-                <Text style={styles.ratings__itemScore}>{item.rating}/5</Text>
-              </View>
-             
-              <Text style={styles.ratings__itemText}>{item.comment}</Text>
-            </View>
-          </TouchableOpacity>
-        ))} */}
         <View style={styles.commentsSection}>
           <View style={styles.commentsHeader}>
             <Text style={styles.commentsTitle}>Nhận xét</Text>

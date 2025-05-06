@@ -814,3 +814,72 @@ const test = {
     },
   ],
 };
+
+
+const a = [
+  {
+    hotelId: 2,
+    hotelLocation: "Hà Nội",
+    hotelName: "Onomo",
+    hotelRating: 4.3,
+    imageUrl:
+      "https://res.cloudinary.com/dt7eo0hbq/image/upload/v1729241122/Room/nipyn0qgyoyhtgkadlyi.jpg",
+    price: 950000,
+    promotionName: "Ưu đãi đầu năm 2025",
+    promotionPrice: null,
+    promotionValue: null,
+    sumReview: 150,
+  },
+  {
+    hotelId: 10,
+    hotelLocation: "Hà Nội",
+    hotelName: "Old Quarter Inn",
+    hotelRating: 4.3,
+    imageUrl:
+      "https://cf.bstatic.com/xdata/images/hotel/square600/149511149.webp?k=b9f47f39523450fe0475de736a4dcd27e255543d1048b66bb45c0e58eeb10e2c&o=",
+    price: 875000,
+    promotionName: "Ưu đãi đầu năm 2025",
+    promotionPrice: null,
+    promotionValue: null,
+    sumReview: 300,
+  },
+  {
+    hotelId: 19,
+    hotelLocation: "Đà Lạt",
+    hotelName: "Dalat Pine Hotel",
+    hotelRating: 4.5,
+    imageUrl:
+      "https://cf.bstatic.com/xdata/images/hotel/square600/663328500.webp?k=f03fe98e5474f76a54645ee3fdb28e99c8f4c607b3a022fbfc2545edffde1242&o=",
+    price: 1125000,
+    promotionName: "Ưu đãi đầu năm 2025",
+    promotionPrice: null,
+    promotionValue: null,
+    sumReview: 340,
+  },
+  {
+    hotelId: 1,
+    hotelLocation: "Đà Nẵng",
+    hotelName: "Heden Golf",
+    hotelRating: 3.9,
+    imageUrl:
+      "https://res.cloudinary.com/dt7eo0hbq/image/upload/v1729241122/Room/nipyn0qgyoyhtgkadlyi.jpg",
+    price: 800000,
+    promotionName: "Ưu đãi đầu năm 2025",
+    promotionPrice: null,
+    promotionValue: null,
+    sumReview: 85,
+  },
+  {
+    hotelId: 8,
+    hotelLocation: "Đà Nẵng",
+    hotelName: "Riverfront Lodge",
+    hotelRating: 4,
+    imageUrl:
+      "https://cf.bstatic.com/xdata/images/hotel/square600/149511149.webp?k=b9f47f39523450fe0475de736a4dcd27e255543d1048b66bb45c0e58eeb10e2c&o=",
+    price: 1000000,
+    promotionName: "Ưu đãi đầu năm 2025",
+    promotionPrice: null,
+    promotionValue: null,
+    sumReview: 200,
+  },
+];

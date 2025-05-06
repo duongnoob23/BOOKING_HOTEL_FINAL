@@ -9,43 +9,40 @@ import {
 } from "react-native";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import { useAppSelector } from "../../Redux/hook";
-import MapPriceScreen from "../../Components/Map/MapPriceScreen";
 import MapCheckScreen from "../../Components/Map/MapCheckScreen";
 
 const CheckScreen = () => {
   // Dữ liệu giả cho danh sách hoạt động
 
-  const { hotelList, hotelDetail, loading, error } = useAppSelector(
-    (state) => state.hotel
-  );
+  const { hotelDetail } = useAppSelector((state) => state.hotel);
   // console.log(">>> 19", hotelDetail?.nearBy?.activityList);
 
   const activityList = hotelDetail?.nearBy?.activityList?.map(
     (item, index) => ({
       id: index,
-      title: item.name,
-      description: item.description,
-      image: item.photoUrl,
-      rating: item.rating,
-      distance: item.distance,
+      title: item?.name,
+      description: item?.description,
+      image: item?.photoUrl,
+      rating: item?.rating,
+      distance: item?.distance,
     })
   );
   // console.log(">>> 28 CheckScreen", activityList);
 
   // Hàm render từng hoạt động
   const renderActivityItem = (item) => (
-    <View style={styles.activity} key={item.id}>
+    <View style={styles.activity} key={item?.id}>
       <Image
-        source={{ uri: item.image }}
+        source={{ uri: item?.image }}
         style={styles.activity__image}
         resizeMode="cover"
       />
       <View style={styles.activity__info}>
-        <Text style={styles.activity__title}>{item.title}</Text>
-        <Text style={styles.activity__description}>{item.description}</Text>
+        <Text style={styles.activity__title}>{item?.title}</Text>
+        <Text style={styles.activity__description}>{item?.description}</Text>
         <View style={styles.activity__text}>
           <View>
-            <Text>Đánh giá {item.reviews}</Text>
+            <Text>Đánh giá {item?.reviews}</Text>
           </View>
           <View>
             <Text>Khoảng cách</Text>
@@ -54,12 +51,12 @@ const CheckScreen = () => {
         <View style={styles.activity__icon}>
           <View style={{ flexDirection: "row" }}>
             <Ionicons name="star" size={18} color="#EBA731" />
-            <Text style={styles.activity__ratingText}>{item.rating}</Text>
+            <Text style={styles.activity__ratingText}>{item?.rating}</Text>
           </View>
           <View>
             <View style={{ flexDirection: "row" }}>
               <Ionicons name="car-outline" size={18} color="#EBA731" />
-              <Text>{item.distance}</Text>
+              <Text>{item?.distance}</Text>
             </View>
           </View>
         </View>
@@ -94,29 +91,7 @@ const CheckScreen = () => {
             {hotelDetail && hotelDetail?.nearBy?.descriptionLocation}
           </Text>
         </View>
-        {/* <View style={styles.rating__details}>
-          <View style={styles.rating__detailItem}>
-            <Ionicons name="walk-outline" size={30} color="#0090FF" />
-            <Text style={styles.rating__detailScore}>3.8</Text>
-            <Text style={styles.rating__detailText}>
-              Tuyệt vời cho các hoạt động gần đó.
-            </Text>
-          </View>
-          <View style={styles.rating__detailItem}>
-            <Ionicons name="bus-outline" size={30} color="#0090FF" />
-            <Text style={styles.rating__detailScore}>0.0</Text>
-            <Text style={styles.rating__detailText}>
-              Không có phương tiện giao thông công cộng.
-            </Text>
-          </View>
-          <View style={styles.rating__detailItem}>
-            <Ionicons name="airplane-outline" size={30} color="#0090FF" />
-            <Text style={styles.rating__detailScore}>2.2</Text>
-            <Text style={styles.rating__detailText}>
-              Tầm để đi đến chuyến đến sân bay.
-            </Text>
-          </View>
-        </View> */}
+
         <Text style={styles.rating__note}>
           Điểm số được tính dựa trên dữ liệu từ Google Maps và đánh giá mức độ
           gần của khách sạn với các điểm tham quan, phương tiện giao thông và
