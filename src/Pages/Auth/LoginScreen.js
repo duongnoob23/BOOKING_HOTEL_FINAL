@@ -119,7 +119,7 @@ const LoginScreen = ({ navigation, route }) => {
           type: "success", // hoặc "error", "info"
           text1: "Success",
           text2: "Đăng nhập Thành Công ",
-          position: "top-right",
+          position: "top",
           duration: 3000,
         });
         setLoading(false);
@@ -135,7 +135,7 @@ const LoginScreen = ({ navigation, route }) => {
           type: "error", // hoặc "error", "info"
           text1: "Lỗi",
           text2: "Tài khoản hoặc mật khẩu không chính xác",
-          position: "top-right",
+          position: "top",
           duration: 3000,
         });
       }
@@ -145,7 +145,7 @@ const LoginScreen = ({ navigation, route }) => {
         type: "error", // hoặc "error", "info"
         text1: "Lỗi",
         text2: "Lỗi gửi idToken lên BackEnd!",
-        position: "top-right",
+        position: "top",
         duration: 3000,
       });
       console.log(error.message);
@@ -174,7 +174,7 @@ const LoginScreen = ({ navigation, route }) => {
           type: "error", // hoặc "error", "info"
           text1: "Lỗi",
           text2: "Không nhận được token từ firebase",
-          position: "top-right",
+          position: "top",
           duration: 3000,
         });
       }
@@ -186,7 +186,7 @@ const LoginScreen = ({ navigation, route }) => {
         type: "error", // hoặc "error", "info"
         text1: "Lỗi",
         text2: "Tài khoản hoặc mật khẩu không chính xác",
-        position: "top-right",
+        position: "top",
         duration: 3000,
       });
     }
@@ -268,7 +268,7 @@ const LoginScreen = ({ navigation, route }) => {
                   type: "success", // hoặc "error", "info"
                   text1: "Thông báo",
                   text2: "Đăng nhập bằng Google đang được thử nghiệm!",
-                  position: "top-right",
+                  position: "top",
                   duration: 3000,
                 })
               }

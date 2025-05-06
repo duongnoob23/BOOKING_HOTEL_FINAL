@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -13,11 +13,16 @@ import {
   updateFilter,
   updateTempFilter,
 } from "../../../Redux/Slice/hotelSlice";
-const ModalFilter = ({ onClose }) => {
+const ModalFilter = ({ onOpen, onClose }) => {
   const { inforFilter, filterList, tempFilter } = useAppSelector(
     (state) => state.hotel
   );
 
+  useEffect(() => {
+    if (onOpen) {
+      onOpen(); // Gọi onOpen khi modal được mở
+    }
+  }, [onOpen]);
   const serviceData = filterList;
 
   const dispatch = useAppDispatch();

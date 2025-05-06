@@ -81,7 +81,7 @@ const HomeScreen = ({ navigation }) => {
           type: "error",
           text1: "Lỗi tải dữ liệu",
           text2: "Không thể tải danh sách khách sạn ",
-          position: "top-right",
+          position: "top",
           duration: 3000,
         });
         console.log(`Attempt ${attempt} failed to fetch hotel list:`, error);
@@ -104,7 +104,7 @@ const HomeScreen = ({ navigation }) => {
           type: "error",
           text1: "Lỗi tải dữ liệu",
           text2: "Không thể tải danh sách địa điểm  ",
-          position: "top-right",
+          position: "top",
           duration: 3000,
         });
         console.log(`Attempt ${attempt} failed to fetch location list:`, error);
@@ -120,12 +120,12 @@ const HomeScreen = ({ navigation }) => {
     try {
       await Promise.all([fetchHotels(), fetchLocations()]);
     } catch (error) {
-      console.error("Failed to fetch data in HomeScreen:", error);
+      console.log("Failed to fetch data in HomeScreen:", error);
       showToast({
         type: "error",
         text1: "Lỗi tải dữ liệu",
         text2: "Không thể tải danh sách khách sạn hoặc địa điểm.",
-        position: "top-right",
+        position: "top",
         duration: 3000,
       });
     }
@@ -148,9 +148,10 @@ const HomeScreen = ({ navigation }) => {
         type: "error",
         text1: "Lõi thiếu dữ liệu ",
         text2: "Không có dữ liệu item truyền sang HotelDetails",
-        position: "top-right",
+        position: "top",
         duration: 3000,
       });
+      return;
     }
     // const id = item?.hotelId;
     // dispatch(fetchHotelById(id));
@@ -209,7 +210,7 @@ const HomeScreen = ({ navigation }) => {
           type: "warning", // hoặc "error", "info"
           text1: "Chọn lại ngày checkin",
           text2: "Ngày CheckIn phải lớn hơn hoặc bằng ngày hiện tại",
-          position: "top-right",
+          position: "top",
           duration: 3000,
         });
         onValidationResult(false);
@@ -252,7 +253,7 @@ const HomeScreen = ({ navigation }) => {
           type: "warning", // hoặc "error", "info"
           text1: "Chọn lại ngày checkout",
           text2: "Ngày CheckOut phải lớn hơn ngày hiện tại",
-          position: "top-right",
+          position: "top",
           duration: 3000,
         });
         onValidationResult(false);
@@ -271,7 +272,7 @@ const HomeScreen = ({ navigation }) => {
             type: "warning", // hoặc "error", "info"
             text1: "Chọn lại ngày checkout",
             text2: "Ngày CheckOut phải lớn hơn ngày CheckIn",
-            position: "top-right",
+            position: "top",
             duration: 3000,
           });
           onValidationResult(false);
@@ -300,17 +301,19 @@ const HomeScreen = ({ navigation }) => {
         type: "warning", // hoặc "error", "info"
         text1: "Thiếu địa điểm ",
         text2: "Vui lòng chọn địa điểm!",
-        position: "top-right",
+        position: "top",
         duration: 3000,
       });
       return;
     }
-    const currentDay = new Date();
-    const nextDay = new Date();
-    nextDay.setDate(currentDay.getDate() + 1);
-    console.log("15", currentDay, nextDay);
-    dispatch(changeCheckInDate(currentDay.toISOString()));
-    dispatch(changeCheckOutDate(nextDay.toISOString()));
+
+    // lỗi
+    // const currentDay = new Date();
+    // const nextDay = new Date();
+    // nextDay.setDate(currentDay.getDate() + 1);
+    // console.log("15", currentDay, nextDay);
+    // dispatch(changeCheckInDate(currentDay.toISOString()));
+    // dispatch(changeCheckOutDate(nextDay.toISOString()));
     dispatch(skeletonLoading());
     navigation.navigate("ListHotelLocation");
   }; // hàm gọi ListHotelByLocation search từ nút tìm kiếm
@@ -554,31 +557,6 @@ const HomeScreen = ({ navigation }) => {
             </View>
           )}
         </View>
-        {/* <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>ƯU ĐÃI CUỐI TUẦN</Text>
-            <TouchableOpacity>
-              <Text style={styles.viewAllText}>XEM TẤT CẢ</Text>
-            </TouchableOpacity>
-          </View>
-          {errorHL === null ? (
-            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-              {hotelList &&
-                hotelList.map((item, index) => {
-                  return <HotelRequestList key={index} item={item} />;
-                })}
-            </ScrollView>
-          ) : (
-            <View style={styles.sectionErorHL}>
-              <TouchableOpacity
-                style={styles.errorHL}
-                onPress={() => handleRetry()}
-              >
-                <Text style={styles.errorHLText}>Thử lại </Text>
-              </TouchableOpacity>
-            </View>
-          )}
-        </View> */}
 
         {Object.keys(hotelList)?.map((promotionName) => (
           <View key={promotionName} style={styles.section}>

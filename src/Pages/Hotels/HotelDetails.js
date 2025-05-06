@@ -56,7 +56,7 @@ const HotelDetails = ({ navigation, route }) => {
           type: "error",
           text1: "Lỗi tải dữ liệu",
           text2: "Không thể tải chi tiết khách sạn.",
-          position: "top-right",
+          position: "top",
           duration: 3000,
         });
         if (attempt === retryCount) {
@@ -77,7 +77,7 @@ const HotelDetails = ({ navigation, route }) => {
         type: "error",
         text1: "Lỗi tải dữ liệu",
         text2: "Không thể tải chi tiết khách sạn.",
-        position: "top-right",
+        position: "top",
         duration: 3000,
       });
     }

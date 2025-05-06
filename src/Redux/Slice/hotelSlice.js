@@ -138,7 +138,6 @@ export const fetchHotelByLocation = createAsyncThunk(
       if (!value) {
         return rejectWithValue("Thiếu dữ liệu lọc khách sạn");
       }
-
       const state = getState();
       const accessToken = state.auth?.accessToken;
       const sortId = state.hotel.inforFilter?.sortById;
@@ -497,6 +496,15 @@ const hotelSlice = createSlice({
     // quản lý trạng thái fetchHotelById - HotelDetails
     loadingHD: false,
     errorHD: null,
+    // quản lý trạng thái fetchHotelByLocation - ListHotelByLocation
+    loadingHBL: false,
+    errorHBL: null,
+    // quản lý trạng thái fetchServiceList
+    loadingSL: false,
+    errorSL: null,
+    // quản lý trạng thái fetchAmenityList
+    loadingAL: false,
+    errorAL: null,
   },
   reducers: {
     changeCheckInDate(state, action) {
@@ -716,25 +724,30 @@ const hotelSlice = createSlice({
         state.errorLL = action.payload || action.error.message;
       })
       .addCase(fetchHotelByLocation.pending, (state) => {
-        state.loadingListHotel = true;
-        state.error = null;
+        state.loadingHBL = true;
+        state.errorHBL = null;
       })
       .addCase(fetchHotelByLocation.fulfilled, (state, action) => {
-        state.loadingListHotel = false;
+        state.loadingHBL = false;
+        state.errorHBL = null;
         state.hotelByLocation = action.payload || [];
       })
       .addCase(fetchHotelByLocation.rejected, (state, action) => {
-        state.loadingListHotel = false;
-        state.error = action.payload || action.error.message;
+        state.loadingHBL = false;
+        state.errorHBL = action.payload || action.error.message;
       })
       .addCase(fetchAmenityList.pending, (state) => {
-        state.error = null;
+        state.loadingAL = true;
+        state.errorAL = null;
       })
       .addCase(fetchAmenityList.fulfilled, (state, action) => {
+        state.loadingAL = false;
+        state.errorAL = null;
         state.amenityList = action.payload || [];
       })
       .addCase(fetchAmenityList.rejected, (state, action) => {
-        state.error = action.payload || action.error.message;
+        state.loadingAL = false;
+        state.errorAL = action.payload || action.error.message;
       })
       .addCase(fetchHotelRoomList.pending, (state) => {
         state.loadingHotelRoomList = true;
@@ -761,13 +774,17 @@ const hotelSlice = createSlice({
         state.error = action.payload || action.error.message;
       })
       .addCase(fetchServiceList.pending, (state) => {
-        state.error = null;
+        state.loadingSL = true;
+        state.errorSL = null;
       })
       .addCase(fetchServiceList.fulfilled, (state, action) => {
         state.filterList = action.payload || [];
+        state.loadingSL = false;
+        state.errorSL = null;
       })
       .addCase(fetchServiceList.rejected, (state, action) => {
-        state.error = action.payload || action.error.message;
+        state.loadingSL = false;
+        state.errorSL = action.payload || action.error.message;
       })
       .addCase(fetchBookingStatus.pending, (state) => {
         state.loadingBookingStatus = true;

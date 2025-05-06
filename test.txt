@@ -112,7 +112,7 @@ const HomeScreen = ({ navigation }) => {
           type: "warning", // hoặc "error", "info"
           text1: "Chọn lại ngày checkin",
           text2: "Ngày CheckIn phải lớn hơn hoặc bằng ngày hiện tại",
-          position: "top-right",
+          position: "top",
           duration: 3000,
         });
         // Alert.alert("Ngày CheckIn phải lớn hơn hoặc bằng ngày hiện tại");
@@ -183,7 +183,7 @@ const HomeScreen = ({ navigation }) => {
           type: "warning", // hoặc "error", "info"
           text1: "Chọn lại ngày checkout",
           text2: "Ngày CheckOut phải lớn hơn ngày hiện tại",
-          position: "top-right",
+          position: "top",
           duration: 3000,
         });
         // Alert.alert("Ngày CheckOut phải lớn hơn ngày hiện tại");
@@ -213,7 +213,7 @@ const HomeScreen = ({ navigation }) => {
                 type: "warning", // hoặc "error", "info"
                 text1: "Chọn lại ngày checkout",
                 text2: "Ngày CheckOut phải lớn hơn ngày CheckIn",
-                position: "top-right",
+                position: "top",
                 duration: 3000,
               });
               // Alert.alert("Ngày CheckOut phải lớn hơn ngày CheckIn");

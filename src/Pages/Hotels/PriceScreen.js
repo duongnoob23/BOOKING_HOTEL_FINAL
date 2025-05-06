@@ -31,7 +31,6 @@ import {
   updateFilter,
 } from "../../Redux/Slice/hotelSlice";
 import ModalDatePicker from "../../Components/Modal/Home/ModalDatePicker";
-import { showToast } from "../../Utils/toast";
 const PriceScreen = ({ navigation, route }) => {
   const {
     hotelList,
@@ -173,7 +172,7 @@ const PriceScreen = ({ navigation, route }) => {
           type: "warning", // hoặc "error", "info"
           text1: "Chọn lại ngày checkin",
           text2: "Ngày CheckIn phải lớn hơn hoặc bằng ngày hiện tại",
-          position: "top-right",
+          position: "top",
           duration: 3000,
         });
         onValidationResult(false);
@@ -216,7 +215,7 @@ const PriceScreen = ({ navigation, route }) => {
           type: "warning", // hoặc "error", "info"
           text1: "Chọn lại ngày checkout",
           text2: "Ngày CheckOut phải lớn hơn ngày hiện tại",
-          position: "top-right",
+          position: "top",
           duration: 3000,
         });
         onValidationResult(false);
@@ -235,7 +234,7 @@ const PriceScreen = ({ navigation, route }) => {
             type: "warning", // hoặc "error", "info"
             text1: "Chọn lại ngày checkout",
             text2: "Ngày CheckOut phải lớn hơn ngày CheckIn",
-            position: "top-right",
+            position: "top",
             duration: 3000,
           });
           onValidationResult(false);
