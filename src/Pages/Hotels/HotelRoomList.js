@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   Text,
   View,
@@ -13,9 +13,10 @@ import { useAppSelector, useAppDispatch } from "../../Redux/hook";
 import Icon from "react-native-vector-icons/FontAwesome";
 import SkeletonHotelRoomList from "../../Components/Skeleton/Hotels/SkeletonHotelRoomList";
 import _ from "lodash";
-import cloneDeep from "lodash/cloneDeep";
+import { showToast } from "../../Utils/toast";
 import {
   fetchBookingRoom,
+  fetchHotelRoomList,
   setNavigateFoodCart,
   update,
   updateBookingPayload,
@@ -31,15 +32,96 @@ const HotelRoomList = ({ navigation, route }) => {
   const {
     hotelRoomList,
     hotelDetail,
-    loadingHotelRoomList,
     inforFilter,
     bookingData,
     bookingPayload,
+    hotelDetailId,
+    loadingHRL,
+    errorHRL,
   } = useAppSelector((state) => state.hotel);
+
   const { serviceList, categories } = useAppSelector((state) => state.service);
   const { token } = useAppSelector((state) => state.auth);
   const dispatch = useAppDispatch();
   const [roomNumber, setRoomNumber] = useState({});
+  const [roomRequestList, setRoomRequestList] = useState(
+    bookingPayload?.roomRequestList || []
+  );
+
+  console.log("21", hotelRoomList);
+
+  const fetchRoomHotel = async (retryCount = 2, delay = 1000) => {
+    for (let attempt = 1; attempt <= retryCount; attempt++) {
+      try {
+        // Tạo object inforFilter_ chứa thông tin đặt phòng
+
+        const inforFilter_ = {
+          hotelId: hotelDetailId,
+          checkInDate: inforFilter?.checkin,
+          checkOutDate: inforFilter?.checkout,
+          roomNumber: inforFilter?.roomNumber,
+          adults: inforFilter?.adults,
+          children: inforFilter?.children,
+        };
+
+        // console.log("goi try catch lan 1");
+        await dispatch(fetchHotelRoomList(inforFilter_)).unwrap();
+        return;
+      } catch (error) {
+        showToast({
+          type: "error",
+          text1: "Lỗi tải dữ liệu",
+          text2: "Không thể tải danh sách phòng khách sạn ",
+          position: "top",
+          duration: 3000,
+        });
+        console.log(
+          `Attempt ${attempt} failed to fetch hotel room list:`,
+          error
+        );
+        if (attempt === retryCount) {
+          throw error;
+        }
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+      }
+    }
+  };
+
+  const fetchData = async () => {
+    try {
+      await Promise.all([fetchRoomHotel()]);
+    } catch (error) {
+      console.log("Failed to fetch data in HomeScreen:", error);
+      showToast({
+        type: "error",
+        text1: "Lỗi tải dữ liệu",
+        text2: "Không thể tải danh sách phòng khách sạn ",
+        position: "top",
+        duration: 3000,
+      });
+    }
+  };
+
+  useEffect(() => {
+    // Tạo bookingPayload để gửi lên server khi đặt phòng
+    const bookingPayload_ = {
+      customerName: "",
+      customerEmail: "",
+      customerPhone: "",
+      hotelId: hotelDetailId,
+      checkInDate: inforFilter?.checkin,
+      checkOutDate: inforFilter?.checkout,
+      couponId: 0,
+      roomRequestList: [],
+    };
+    dispatch(updateBookingPayload(bookingPayload_));
+    fetchData();
+  }, [inforFilter, hotelDetailId, dispatch]);
+
+  const handleRetry = () => {
+    fetchData();
+  };
+
   const initialRoomNumber = () => {
     const newRooms = {};
     if (hotelRoomList && hotelRoomList.length > 0) {
@@ -47,7 +129,6 @@ const HotelRoomList = ({ navigation, route }) => {
         newRooms[`room${room.roomId}`] = 0;
       });
     }
-    // console.log("done");
     return newRooms;
   };
 
@@ -92,41 +173,42 @@ const HotelRoomList = ({ navigation, route }) => {
   };
 
   useEffect(() => {
-    const roomRequestList = Object.keys(roomNumber)
+    const newRoomRequestList = Object.keys(roomNumber)
       .filter((key) => +roomNumber[key] > 0)
       .flatMap((key) => {
         const roomId = parseInt(key.replace("room", ""), 10);
-        const room = hotelRoomList.find((r) => r.roomId === roomId);
+        const room = hotelRoomList.find((r) => r?.roomId === roomId);
         return Array(roomNumber[key])
           .fill()
           .map((_, index) => {
             const uniqueId = `room${roomId}_${index + 1}`;
-            const existingRoom = bookingPayload.roomRequestList?.find(
-              (r) => r.uniqueId === uniqueId
+            const existingRoom = bookingPayload?.newRoomRequestList?.find(
+              (r) => r?.uniqueId === uniqueId
             );
             return {
               uniqueId: uniqueId,
               roomId: roomId,
-              adults: inforFilter.adults,
-              children: inforFilter.children,
-              price: room ? room.price : 0,
-              serviceList: existingRoom ? existingRoom.serviceList : [],
-              roomName: room.roomName,
+              adults: inforFilter?.adults,
+              children: inforFilter?.children,
+              price: room ? room?.price : 0,
+              serviceList: existingRoom ? existingRoom?.serviceList : [],
+              roomName: room?.roomName,
             };
           });
       });
-    // serviceIdList;
+
+    setRoomRequestList(newRoomRequestList);
+  }, [roomNumber]);
+  const hasSelectedRooms = Object.values(roomNumber).some((count) => count > 0);
+
+  const handleToInfoConfirm = () => {
     const bookingPayload_ = {
       ...bookingPayload,
       roomRequestList: roomRequestList,
     };
 
     dispatch(updateBookingPayload(bookingPayload_));
-  }, [roomNumber]);
-  const hasSelectedRooms = Object.values(roomNumber).some((count) => count > 0);
 
-  const handleToInfoConfirm = () => {
-    // console.log(">>> 105 HTL  >>> bookingPayload:", bookingPayload);
     const roomQuantities = Object.keys(roomNumber).reduce((acc, key) => {
       const roomId = parseInt(key.replace("room", ""));
       acc.push({
@@ -135,18 +217,22 @@ const HotelRoomList = ({ navigation, route }) => {
       });
       return acc;
     }, []);
-    // dispatch(updateRoomNumber(roomQuantities));
 
     dispatch(fetchServicesByCategory(roomQuantities));
     navigation.navigate("InfoConfirm");
   };
 
   const handleToOrderFood = () => {
+    // lưu lại trang để quay về cho FoodCart
     dispatch(setNavigateFoodCart("InfoConfirm"));
-    // const roomQuantities =
-    // console.log(
-    //   "-------------------------------------------------------------"
-    // );
+
+    // lưu lại dữ liệu bookingPayload
+    const bookingPayload_ = {
+      ...bookingPayload,
+      roomRequestList: roomRequestList,
+    };
+    dispatch(updateBookingPayload(bookingPayload_));
+
     const roomQuantities = Object.keys(roomNumber).reduce((acc, key) => {
       const roomId = parseInt(key.replace("room", ""));
       acc.push({
@@ -155,32 +241,29 @@ const HotelRoomList = ({ navigation, route }) => {
       });
       return acc;
     }, []);
-    // console.log(roomQuantities);
-    // console.log(
-    //   "-------------------------------------------------------------"
-    // );
+    console.log("22>>>", roomQuantities);
+    // dispatch(updateRoomQuantities(roomQuantities));
 
-    // dispatch(updateRoomNumber(roomQuantities));
     dispatch(fetchServicesByCategory(roomQuantities));
     navigation.navigate("OrderFood");
   };
 
-  if (loadingHotelRoomList) {
+  if (loadingHRL) {
     return <SkeletonHotelRoomList />;
   }
-
-  console.log(">>> full ảnh", item);
 
   const RoomItem = ({ room }) => {
     // console.log(room.serviceEntityList);
     return (
       <View style={styles.card}>
         {/* Hình ảnh phòng */}
-        <Image source={{ uri: `${item.imageUrl}` }} style={styles.roomImage} />
+        <Image source={{ uri: `${item?.imageUrl}` }} style={styles.roomImage} />
         {/* Tiêu đề và số lượng phòng */}
         <View style={styles.header}>
-          <Text style={styles.roomName}>{room.roomName}</Text>
-          <Text style={styles.roomQuantity}>Còn {room.roomQuantity} phòng</Text>
+          <Text style={styles.roomName}>{room?.roomName}</Text>
+          <Text style={styles.roomQuantity}>
+            Còn {room?.roomQuantity} phòng
+          </Text>
         </View>
         {/* Thông tin cơ bản */}
         <View style={styles.info}>
@@ -191,7 +274,7 @@ const HotelRoomList = ({ navigation, route }) => {
               color="#191D39"
               style={styles.iconItem}
             />
-            <Text style={styles.infoText}>Diện tích {room.area} m²</Text>
+            <Text style={styles.infoText}>Diện tích {room?.area} m²</Text>
           </View>
           <View style={styles.infoItem}>
             <Ionicons
@@ -200,7 +283,7 @@ const HotelRoomList = ({ navigation, route }) => {
               color="#191D39"
               style={styles.iconItem}
             />
-            <Text style={styles.infoText}>Giường: {room.bed}</Text>
+            <Text style={styles.infoText}>Giường: {room?.bed}</Text>
           </View>
           <View style={styles.infoItem}>
             <Ionicons
@@ -210,23 +293,23 @@ const HotelRoomList = ({ navigation, route }) => {
               style={styles.iconItem}
             />
             <Text style={styles.infoText}>
-              Số ngày chọn: {room.roomQuantity}
+              Số ngày chọn: {room?.roomQuantity} // đoạn này có vẻ sai
             </Text>
           </View>
         </View>
         {/* Dịch vụ */}
         <View style={styles.services}>
           {room?.serviceEntityList?.map((service) => (
-            <View key={service.id} style={styles.serviceItem}>
+            <View key={service?.id} style={styles.serviceItem}>
               <Ionicons name="checkmark-circle" size={15} color="#4DD0E1" />
-              <Text style={styles.serviceText}>{service.name}</Text>
+              <Text style={styles.serviceText}>{service?.name}</Text>
             </View>
           ))}
         </View>
         {/* •  */}
         <View style={styles.policies}>
           {room?.policyRoomList?.map((policy) => (
-            <View key={policy.policyId} style={styles.policyItem}>
+            <View key={policy?.policyId} style={styles.policyItem}>
               <Ionicons
                 name="newspaper-outline"
                 size={15}
@@ -234,7 +317,7 @@ const HotelRoomList = ({ navigation, route }) => {
                 style={styles.iconPolicy}
               />
               <Text style={styles.policyText}>
-                {policy.policyName}: {policy.policyDescription}
+                {policy?.policyName}: {policy?.policyDescription}
               </Text>
             </View>
           ))}
@@ -250,14 +333,16 @@ const HotelRoomList = ({ navigation, route }) => {
                   color="#191D39"
                   style={styles.iconPolicy}
                 />
-                <Text style={styles.promotionText}>{room.promotion.name}</Text>
+                <Text style={styles.promotionText}>
+                  {room?.promotion?.name}
+                </Text>
               </View>
             )}
           </View>
           {room?.promotion?.discountValue && (
             <View style={styles.discountBadge}>
               <Text style={styles.discountText}>
-                Giảm {room.promotion.discountValue}
+                Giảm {room?.promotion?.discountValue}
               </Text>
             </View>
           )}
@@ -269,23 +354,23 @@ const HotelRoomList = ({ navigation, route }) => {
           <View style={styles.priceWrapper}>
             <View style={styles.discountedPriceView}>
               <Text style={styles.discountedPrice}>
-                {room.price.toLocaleString()}đ
+                {room?.price.toLocaleString()}đ
               </Text>
               <Text style={styles.originalPrice}>
-                {room.promotionPrice.toLocaleString()}đ
+                {room?.promotionPrice.toLocaleString()}đ
               </Text>
             </View>
           </View>
         </View>
         {/* Nút Chọn và tùy chỉnh */}
-        {roomNumber[`room${room.roomId}`] === 0 ? (
+        {roomNumber[`room${room?.roomId}`] === 0 ? (
           <TouchableOpacity
             style={styles.selectButton}
             onPress={() =>
               updateDateRoomNumber(
-                `room${room.roomId}`,
+                `room${room?.roomId}`,
                 "add",
-                room.roomQuantity
+                room?.roomQuantity
               )
             }
           >
@@ -297,9 +382,9 @@ const HotelRoomList = ({ navigation, route }) => {
               style={styles.decreaseButton}
               onPress={() =>
                 updateDateRoomNumber(
-                  `room${room.roomId}`,
+                  `room${room?.roomId}`,
                   "sub",
-                  room.roomQuantity
+                  room?.roomQuantity
                 )
               }
             >
@@ -308,16 +393,16 @@ const HotelRoomList = ({ navigation, route }) => {
             </TouchableOpacity>
             <View style={styles.valueButton}>
               <Text style={styles.valueButtonText}>
-                {roomNumber[`room${room.roomId}`]}
+                {roomNumber[`room${room?.roomId}`]}
               </Text>
             </View>
             <TouchableOpacity
               style={styles.increaseButton}
               onPress={() =>
                 updateDateRoomNumber(
-                  `room${room.roomId}`,
+                  `room${room?.roomId}`,
                   "add",
-                  room.roomQuantity
+                  room?.roomQuantity
                 )
               }
             >
@@ -332,6 +417,7 @@ const HotelRoomList = ({ navigation, route }) => {
   // khi mình bấm vào nút chọn thì dữ liệu sẽ nhảy thành 3 nút, - giá trị +
   // mỗi một item đều có một nút chọn riêng
   // chỉ cần 1 phòng có nút chọn khác 1 thì sẽ hiện nút đặt ngay lênlên
+
   return (
     <>
       <ScrollView
@@ -344,29 +430,42 @@ const HotelRoomList = ({ navigation, route }) => {
           <View style={styles.header__overlay__image}>
             <Image
               source={{
-                uri: `${item.imageUrl}`,
+                uri: `${item?.imageUrl}`,
               }}
               style={styles.rateDetail__photo}
             />
           </View>
           <View style={styles.header__overlay__content}>
             <View>
-              <Text style={styles.header__title}>{item.hotelName}</Text>
+              <Text style={styles.header__title}>{item?.hotelName}</Text>
             </View>
             <View style={styles.header__label}>
               <Text style={styles.header__desc}>
-                {hotelDetail && hotelDetail.review.rating}
+                {hotelDetail && hotelDetail?.review?.rating}
               </Text>
               <Text style={styles.header__desc}>
-                {hotelDetail && hotelDetail.review.location}
+                {hotelDetail && hotelDetail?.review?.location}
               </Text>
             </View>
           </View>
         </View>
         <View style={styles.header}></View>
-        {hotelRoomList?.map((room) => (
-          <RoomItem key={room.roomId} room={room} />
-        ))}
+        {errorHRL === null ? (
+          <View>
+            {hotelRoomList?.map((room) => (
+              <RoomItem key={room?.roomId} room={room} />
+            ))}
+          </View>
+        ) : (
+          <View style={styles.sectionErorHL}>
+            <TouchableOpacity
+              style={styles.errorHL}
+              onPress={() => handleRetry()}
+            >
+              <Text style={styles.errorHLText}>Thử lại </Text>
+            </TouchableOpacity>
+          </View>
+        )}
       </ScrollView>
 
       {hasSelectedRooms && (
@@ -757,5 +856,25 @@ const styles = StyleSheet.create({
     marginLeft: 10,
     paddingHorizontal: 20,
     paddingVertical: 15,
+  },
+  sectionErorHL: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    height: 600,
+    backgroundColor: "white",
+  },
+  errorHL: {
+    backgroundColor: "white",
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "gray",
+    padding: 20,
+    paddingVertical: 10,
+  },
+  errorHLText: {
+    color: "gray",
+    fontSize: 16,
+    fontWeight: "400",
   },
 });

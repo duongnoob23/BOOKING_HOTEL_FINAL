@@ -22,6 +22,9 @@ const initValue = {
   registerError: null,
   registerSuccess: false,
   prePage: null,
+  // quản lý api fetchUserInfo
+  loadingIU: false,
+  errorIU: null,
 };
 
 export const fetchUserInfo = createAsyncThunk(
@@ -213,17 +216,18 @@ const authSlice = createSlice({
   extraReducers: (builder) => {
     builder
       .addCase(fetchUserInfo.pending, (state) => {
-        state.loadingInfoUser = true;
-        state.error = null;
+        state.loadingIU = true;
+        state.errorIU = null;
       })
       .addCase(fetchUserInfo.fulfilled, (state, action) => {
         console.log(">>> fetchUserInfo fulfilled >>>", action.payload);
-        state.loadingInfoUser = false;
+        state.loadingIU = false;
+        state.errorIU = null;
         state.infoUser = action.payload;
       })
       .addCase(fetchUserInfo.rejected, (state, action) => {
-        state.loadingInfoUser = false;
-        state.error = action.payload || action.error.message;
+        state.loadingIU = false;
+        state.errerrorIUor = action.payload || action.error.message;
       })
       .addCase(registerUser.pending, (state) => {
         state.registerLoading = true;

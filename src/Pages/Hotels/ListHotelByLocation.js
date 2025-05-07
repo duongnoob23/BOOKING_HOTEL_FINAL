@@ -317,10 +317,6 @@ const ListHotelByLocation = ({ navigation }) => {
 
   // hàm hiển thị từng item trong danh sách khách sạnsạn
   const HotelItem = ({ item }) => {
-    if (item?.promotionPrice && item?.price) {
-      console.log("18", item.price);
-      console.log("19", item.promotionPrice);
-    }
     return (
       <TouchableOpacity
         style={styles.hotelItem}

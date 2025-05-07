@@ -445,6 +445,7 @@ const hotelSlice = createSlice({
     bookingPayload: [],
     listUniqueIdBookingRoom: [],
     listBookingRoom: [],
+    roomQuantities: [],
     loading: false,
     loadingListHotel: false,
     loadingHotelRoomList: false,
@@ -505,8 +506,14 @@ const hotelSlice = createSlice({
     // quản lý trạng thái fetchAmenityList
     loadingAL: false,
     errorAL: null,
+    // quản lý trạng thái fetchHotelRoomList
+    loadingHRL: false,
+    errorHRL: null,
   },
   reducers: {
+    updateRoomQuantities(state, action) {
+      state.roomQuantities = action.payload;
+    },
     changeCheckInDate(state, action) {
       // state.inforFilter = {
       //   ...state.inforFilter,
@@ -750,16 +757,17 @@ const hotelSlice = createSlice({
         state.errorAL = action.payload || action.error.message;
       })
       .addCase(fetchHotelRoomList.pending, (state) => {
-        state.loadingHotelRoomList = true;
-        state.error = null;
+        state.loadingHRL = true;
+        state.errorHRL = null;
       })
       .addCase(fetchHotelRoomList.fulfilled, (state, action) => {
-        state.loadingHotelRoomList = false;
+        state.loadingHRL = false;
+        state.errorHRL = null;
         state.hotelRoomList = action.payload || [];
       })
       .addCase(fetchHotelRoomList.rejected, (state, action) => {
-        state.loadingHotelRoomList = false;
-        state.error = action.payload || action.error.message;
+        state.loadingHRL = false;
+        state.errorHRL = action.payload || action.error.message;
       })
       .addCase(fetchBookingRoom.pending, (state) => {
         state.loadingBookingRoom = true;
@@ -835,6 +843,7 @@ const hotelSlice = createSlice({
 });
 
 export const {
+  updateRoomQuantities,
   changeCheckInDate,
   changeCheckOutDate,
   clearHotelDetail,

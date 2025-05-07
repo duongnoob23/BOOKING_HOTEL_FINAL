@@ -18,9 +18,10 @@ const ShopCart = ({ navigation, route }) => {
   const { cart, loadingService, error } = useAppSelector(
     (state) => state.service
   );
-  const { bookingPayload, navigateFoodCart } = useAppSelector(
+  const { bookingPayload, navigateFoodCart, roomQuantities } = useAppSelector(
     (state) => state.hotel
   );
+  console.log("22>>>", roomQuantities);
   const [serviceQuantities, setServiceQuantities] = useState([]);
   const [expandedServices, setExpandedServices] = useState({});
   const roomMapping = route.params?.roomMapping || {};

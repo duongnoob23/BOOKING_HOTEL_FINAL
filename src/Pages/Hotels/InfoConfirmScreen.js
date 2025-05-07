@@ -25,21 +25,25 @@ import SkeletonInfoConfirm from "../../Components/Skeleton/Auth/SkeletonInfoConf
 const InfoConfirmScreen = ({ navigation }) => {
   const dispatch = useAppDispatch();
 
+  // dữ liệu redux auth
   const {
     isLoggedIn,
     infoUser,
     inforUserChange,
-    loadingInfoUser,
-    error,
+    loadingIU,
+    errorIU,
     accessToken,
   } = useAppSelector((state) => state.auth);
 
+  // dữ liệu redux hotel
   const { bookingPayload, listUniqueIdBookingRoom } = useAppSelector(
     (state) => state.hotel
   );
+
   console.log("infoUser", infoUser);
   console.log("inforUserChange", inforUserChange);
 
+  // khởi tạo mảng lưu thông tin người dùng
   const [infomation, setInfomation] = useState({
     firstName: "",
     lastName: "",
@@ -48,6 +52,7 @@ const InfoConfirmScreen = ({ navigation }) => {
     phoneCountry: "+84",
   });
 
+  // mảng check lỗi người dùng
   const [errors, setErrors] = useState({
     firstName: "",
     lastName: "",
@@ -55,12 +60,53 @@ const InfoConfirmScreen = ({ navigation }) => {
     phoneNumber: "",
   });
 
+  const fetchUserInformation = async (retryCount = 2, delay = 1000) => {
+    for (let attempt = 1; attempt <= retryCount; attempt++) {
+      try {
+        // console.log("goi try catch lan 1");
+        await dispatch(fetchUserInfo()).unwrap();
+        return;
+      } catch (error) {
+        showToast({
+          type: "error",
+          text1: "Lỗi tải dữ liệu",
+          text2: "Không thể tải thông tin người dùng ",
+          position: "top",
+          duration: 3000,
+        });
+        console.log(`Attempt ${attempt} failed to fetch user info :`, error);
+        if (attempt === retryCount) {
+          throw error;
+        }
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+      }
+    }
+  };
+
+  const fetchData = async () => {
+    try {
+      await Promise.all([fetchUserInformation()]);
+    } catch (error) {
+      console.log("Failed to fetch data in HomeScreen:", error);
+      showToast({
+        type: "error",
+        text1: "Lỗi tải dữ liệu",
+        text2: "Không thể tải dữ liệu người dùng ",
+        position: "top",
+        duration: 3000,
+      });
+    }
+  };
+
+  // kiểm tra nếu đã đăng nhập và chưa có thông tin người dùng (infoUser) thì gọi api cập nhậtnhật
   useEffect(() => {
     if (isLoggedIn && !infoUser) {
-      dispatch(fetchUserInfo());
+      // dispatch(fetchUserInfo());
+      fetchData();
     }
   }, [isLoggedIn, accessToken, dispatch]);
 
+  // nếu đã đăng nhập và có thông tin (infoUser) thì cập nhật vào trong infomation
   useEffect(() => {
     if (isLoggedIn && infoUser) {
       // Ưu tiên inforUserChange nếu tồn tại, nếu không dùng infoUser
@@ -75,6 +121,7 @@ const InfoConfirmScreen = ({ navigation }) => {
     }
   }, [infoUser, inforUserChange]);
 
+  // form validate dữ liệu trước khi xác nhận
   const validateForm = () => {
     let valid = true;
     const newErrors = {
@@ -111,16 +158,19 @@ const InfoConfirmScreen = ({ navigation }) => {
     return valid;
   };
 
+  // thay đổi input set lại giá trị
   const onChangeInfomation = (value, name) => {
     setInfomation((prev) => ({ ...prev, [name]: value }));
     setErrors((prev) => ({ ...prev, [name]: "" }));
   };
 
+  // hàm nhảy sang login nếu chưa đăng nhập
   const handleLogin = () => {
     dispatch(setPrePage("InfoConfirm"));
     navigation.navigate("LoginScreen", { preScreen: "InfoConfirm" });
   };
 
+  // hàm xác nhận -> sang chi tiết hóa đơn
   const handleInfoConfirm = async () => {
     if (isLoggedIn) {
       if (!validateForm()) {
@@ -131,18 +181,18 @@ const InfoConfirmScreen = ({ navigation }) => {
         // Lưu thông tin chỉnh sửa cục bộ
         dispatch(
           updateInforUserChange({
-            firstName: infomation.firstName,
-            lastName: infomation.lastName,
-            email: infomation.email,
-            phone: infomation.phoneNumber,
-            phoneCountry: infomation.phoneCountry,
+            firstName: infomation?.firstName,
+            lastName: infomation?.lastName,
+            email: infomation?.email,
+            phone: infomation?.phoneNumber,
+            phoneCountry: infomation?.phoneCountry,
           })
         );
         const bookingPayload_ = {
           ...bookingPayload,
-          customerName: infomation.lastName,
-          customerEmail: infomation.email,
-          customerPhone: infomation.phoneNumber,
+          customerName: infomation?.lastName,
+          customerEmail: infomation?.email,
+          customerPhone: infomation?.phoneNumber,
         };
         dispatch(updateBookingPayload(bookingPayload_));
 
@@ -158,7 +208,7 @@ const InfoConfirmScreen = ({ navigation }) => {
     }
   };
 
-  if (loadingInfoUser) {
+  if (loadingIU) {
     return <SkeletonInfoConfirm />;
   }
 
@@ -176,7 +226,7 @@ const InfoConfirmScreen = ({ navigation }) => {
             <View
               style={[
                 styles.inputContainer,
-                errors.firstName && styles.inputError,
+                errors?.firstName && styles.inputError,
               ]}
             >
               <Ionicons
@@ -187,21 +237,21 @@ const InfoConfirmScreen = ({ navigation }) => {
               />
               <TextInput
                 style={styles.input}
-                value={infomation.firstName}
+                value={infomation?.firstName}
                 onChangeText={(value) => onChangeInfomation(value, "firstName")}
                 placeholder="Họ *"
                 placeholderTextColor="#999"
                 editable={isLoggedIn}
               />
-              {errors.firstName ? (
-                <Text style={styles.errorText}>{errors.firstName}</Text>
+              {errors?.firstName ? (
+                <Text style={styles.errorText}>{errors?.firstName}</Text>
               ) : null}
             </View>
 
             <View
               style={[
                 styles.inputContainer,
-                errors.lastName && styles.inputError,
+                errors?.lastName && styles.inputError,
               ]}
             >
               <Ionicons
@@ -212,19 +262,22 @@ const InfoConfirmScreen = ({ navigation }) => {
               />
               <TextInput
                 style={styles.input}
-                value={infomation.lastName}
+                value={infomation?.lastName}
                 onChangeText={(value) => onChangeInfomation(value, "lastName")}
                 placeholder="Tên *"
                 placeholderTextColor="#999"
                 editable={isLoggedIn}
               />
-              {errors.lastName ? (
-                <Text style={styles.errorText}>{errors.lastName}</Text>
+              {errors?.lastName ? (
+                <Text style={styles.errorText}>{errors?.lastName}</Text>
               ) : null}
             </View>
 
             <View
-              style={[styles.inputContainer, errors.email && styles.inputError]}
+              style={[
+                styles.inputContainer,
+                errors?.email && styles.inputError,
+              ]}
             >
               <Ionicons
                 name="mail-outline"
@@ -234,22 +287,22 @@ const InfoConfirmScreen = ({ navigation }) => {
               />
               <TextInput
                 style={styles.input}
-                value={infomation.email}
+                value={infomation?.email}
                 onChangeText={(value) => onChangeInfomation(value, "email")}
                 placeholder="Email *"
                 placeholderTextColor="#999"
                 keyboardType="email-address"
                 editable={isLoggedIn}
               />
-              {errors.email ? (
-                <Text style={styles.errorText}>{errors.email}</Text>
+              {errors?.email ? (
+                <Text style={styles.errorText}>{errors?.email}</Text>
               ) : null}
             </View>
 
             <View
               style={[
                 styles.inputContainer,
-                errors.phoneNumber && styles.inputError,
+                errors?.phoneNumber && styles.inputError,
               ]}
             >
               <Ionicons
@@ -260,12 +313,12 @@ const InfoConfirmScreen = ({ navigation }) => {
               />
               <TextInput
                 style={[styles.input]}
-                value={infomation.phoneCountry}
+                value={infomation?.phoneCountry}
                 editable={false}
               />
               <TextInput
                 style={[styles.input, { flex: 1 }]}
-                value={infomation.phoneNumber}
+                value={infomation?.phoneNumber}
                 onChangeText={(value) =>
                   onChangeInfomation(value, "phoneNumber")
                 }
@@ -274,8 +327,8 @@ const InfoConfirmScreen = ({ navigation }) => {
                 keyboardType="phone-pad"
                 editable={isLoggedIn}
               />
-              {errors.phoneNumber ? (
-                <Text style={styles.errorText}>{errors.phoneNumber}</Text>
+              {errors?.phoneNumber ? (
+                <Text style={styles.errorText}>{errors?.phoneNumber}</Text>
               ) : null}
             </View>
           </>
@@ -283,12 +336,12 @@ const InfoConfirmScreen = ({ navigation }) => {
 
         {isLoggedIn && (
           <TouchableOpacity
-            style={[styles.button, loadingInfoUser && styles.buttonDisabled]}
+            style={[styles.button, loadingIU && styles.buttonDisabled]}
             onPress={handleInfoConfirm}
-            disabled={loadingInfoUser}
+            disabled={loadingIU}
           >
             <Text style={styles.buttonText}>
-              {loadingInfoUser ? "Đang xử lý..." : "Xác nhận thông tin"}
+              {loadingIU ? "Đang xử lý..." : "Xác nhận thông tin"}
             </Text>
           </TouchableOpacity>
         )}

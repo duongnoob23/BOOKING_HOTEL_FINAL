@@ -94,36 +94,8 @@ const HotelDetails = ({ navigation, route }) => {
   };
 
   // Hàm xử lý khi nhấn nút "Đặt ngay"
-  const handleInfoConfirm = () => {
-    // Tạo object inforFilter_ chứa thông tin đặt phòng
-    const inforFilter_ = {
-      hotelId: hotelId,
-      checkInDate: inforFilter.checkin,
-      checkOutDate: inforFilter.checkout,
-      roomNumber: inforFilter.roomNumber,
-      adults: inforFilter.adults,
-      children: inforFilter.children,
-    };
-
-    // Tạo bookingPayload để gửi lên server khi đặt phòng
-    const bookingPayload = {
-      customerName: "",
-      customerEmail: "",
-      customerPhone: "",
-      hotelId: hotelId,
-      checkInDate: inforFilter.checkin,
-      checkOutDate: inforFilter.checkout,
-      couponId: 0,
-      roomRequestList: [],
-    };
-
-    // Cập nhật bookingPayload và hotelDetailId vào Redux store
-    dispatch(updateBookingPayload(bookingPayload));
+  const handleToHotelRoomList = () => {
     dispatch(updateHotelDetailId(hotelId));
-
-    // Gọi API để lấy danh sách phòng của khách sạn
-    dispatch(fetchHotelRoomList(inforFilter_));
-
     // Điều hướng đến trang HotelRoomList để chọn phòng
     navigation.navigate("HotelRoomList", { item });
   };
@@ -290,7 +262,7 @@ const HotelDetails = ({ navigation, route }) => {
         </Text>
         <TouchableOpacity
           style={styles.footer__button}
-          onPress={handleInfoConfirm}
+          onPress={handleToHotelRoomList}
         >
           <Text style={styles.footer__button__text}>ĐẶT NGAY</Text>
         </TouchableOpacity>
