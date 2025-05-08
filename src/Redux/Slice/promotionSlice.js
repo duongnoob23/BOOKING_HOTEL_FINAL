@@ -48,7 +48,7 @@ const promotionSlice = createSlice({
   name: "promotion",
   initialState: {
     loadingPromotion: false,
-    error: null,
+    errorP: null,
     listPromotion: [],
   },
   reducers: {},
@@ -56,15 +56,16 @@ const promotionSlice = createSlice({
     builder
       .addCase(fetchListPromotion.pending, (state) => {
         state.loadingPromotion = true;
-        state.error = null;
+        state.errorP = null;
       })
       .addCase(fetchListPromotion.fulfilled, (state, action) => {
         state.loadingPromotion = false;
         state.listPromotion = action.payload;
+        state.errorP = null;
       })
       .addCase(fetchListPromotion.rejected, (state, action) => {
         state.loadingPromotion = false;
-        state.error = action.payload || action.error.message;
+        state.errorP = action.payload || action.error.message;
       });
   },
 });

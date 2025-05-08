@@ -509,6 +509,9 @@ const hotelSlice = createSlice({
     // quản lý trạng thái fetchHotelRoomList
     loadingHRL: false,
     errorHRL: null,
+    // quản lý trạng thái fetchBookingRoom
+    loadingBR: false,
+    errorBR: null,
   },
   reducers: {
     updateRoomQuantities(state, action) {
@@ -770,16 +773,17 @@ const hotelSlice = createSlice({
         state.errorHRL = action.payload || action.error.message;
       })
       .addCase(fetchBookingRoom.pending, (state) => {
-        state.loadingBookingRoom = true;
-        state.error = null;
+        state.loadingBR = true;
+        state.errorBR = null;
       })
       .addCase(fetchBookingRoom.fulfilled, (state, action) => {
-        state.loadingBookingRoom = false;
+        state.loadingBR = false;
+        state.errorBR = null;
         state.bookingData = action.payload || [];
       })
       .addCase(fetchBookingRoom.rejected, (state, action) => {
-        state.loadingBookingRoom = false;
-        state.error = action.payload || action.error.message;
+        state.loadingBR = false;
+        state.errorBR = action.payload || action.error.message;
       })
       .addCase(fetchServiceList.pending, (state) => {
         state.loadingSL = true;

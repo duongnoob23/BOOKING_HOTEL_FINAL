@@ -21,6 +21,7 @@ import {
   updateBookingPayload,
 } from "../../Redux/Slice/hotelSlice";
 import SkeletonInfoConfirm from "../../Components/Skeleton/Auth/SkeletonInfoConfirm";
+import { showToast } from "../../Utils/toast";
 
 const InfoConfirmScreen = ({ navigation }) => {
   const dispatch = useAppDispatch();
@@ -197,7 +198,7 @@ const InfoConfirmScreen = ({ navigation }) => {
         dispatch(updateBookingPayload(bookingPayload_));
 
         // Gọi fetchBookingRoom và điều hướng
-        dispatch(fetchBookingRoom());
+        // dispatch(fetchBookingRoom());
         navigation.navigate("OrderConfirm");
       } catch (error) {
         console.error("Error:", error);

@@ -26,6 +26,7 @@ import {
 } from "../../Redux/Slice/paymentSlice";
 import ReusableModal from "../../Components/Modal/FlexibleModal/ReusableModal";
 import cloneDeep from "lodash/cloneDeep";
+import { showToast } from "../../Utils/toast";
 const OrderConfirmScreen = ({ navigation }) => {
   const [paymentMethod, setPaymentMethod] = useState("ZaloPay");
   const [isLoading, setIsLoading] = useState(false);
@@ -33,14 +34,13 @@ const OrderConfirmScreen = ({ navigation }) => {
   const [modalType, setModalType] = useState("confirm");
   const [modalTitle, setModalTitle] = useState("");
   const [modalMessage, setModalMessage] = useState("");
-
+  // khai báo redux auth
   const { inforUserChange, infoUser } = useAppSelector((state) => state.auth);
-  const {
-    bookingData,
-    bookingPayload,
-    listUniqueIdBookingRoom,
-    loadingBookingRoom,
-  } = useAppSelector((state) => state.hotel);
+  const { bookingData, bookingPayload, loadingBR, errorBR } = useAppSelector(
+    (state) => state.hotel
+  );
+  console.log("24>>>", bookingPayload);
+  // khai báo redux payment
   const { paymentData, loadingPayment, error } = useAppSelector(
     (state) => state.payment
   );
@@ -51,6 +51,7 @@ const OrderConfirmScreen = ({ navigation }) => {
   const dispatch = useAppDispatch();
   const listRoom = bookingData?.roomBookedList;
 
+  // set thuộc tính modal
   const showModal = (type, title, message) => {
     setModalType(type);
     setModalTitle(title);
@@ -58,14 +59,84 @@ const OrderConfirmScreen = ({ navigation }) => {
     setModalVisible(true);
   };
 
+  const fetchPayment = async (retryCount = 2, delay = 1000) => {
+    for (let attempt = 1; attempt <= retryCount; attempt++) {
+      try {
+        // console.log("goi try catch lan 1");
+        await dispatch(fetchPaymentOrder()).unwrap();
+        return;
+      } catch (error) {
+        showToast({
+          type: "error",
+          text1: "Lỗi thanh toán ",
+          text2: "Vui lòng bấm xác nhận đặt phòng lại",
+          position: "top",
+          duration: 3000,
+        });
+        console.log(`Attempt ${attempt} failed to fetch payment :`, error);
+        if (attempt === retryCount) {
+          throw error;
+        }
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+      }
+    }
+  };
+
+  const fetchBooking = async (retryCount = 2, delay = 1000) => {
+    for (let attempt = 1; attempt <= retryCount; attempt++) {
+      try {
+        // console.log("goi try catch lan 1");
+        await dispatch(fetchBookingRoom(bookingPayload)).unwrap();
+        return;
+      } catch (error) {
+        showToast({
+          type: "error",
+          text1: "Lỗi tải dữ liệu",
+          text2: "Không thể tải dữ liệu chi tiết hóa đơn  ",
+          position: "top",
+          duration: 3000,
+        });
+        console.log(`Attempt ${attempt} failed to fetch order :`, error);
+        if (attempt === retryCount) {
+          throw error;
+        }
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+      }
+    }
+  };
+
+  const fetchData = async () => {
+    try {
+      await Promise.all([fetchBooking()]);
+    } catch (error) {
+      console.log("Failed to fetch data in OrderConfirm :", error);
+      showToast({
+        type: "error",
+        text1: "Lỗi tải dữ liệu",
+        text2: "Không thể tải dữ liệu chi tiết hóa đơn .",
+        position: "top",
+        duration: 3000,
+      });
+    }
+  };
+
   useEffect(() => {
     const bookingPayload_ = {
       ...bookingPayload,
-      couponId: bookingData?.couponId,
-      couponCode: bookingData?.couponCode,
+      couponId: bookingData?.couponId || 0,
+      couponCode: bookingData?.couponCode || "",
     };
     dispatch(updateBookingPayload(bookingPayload_));
   }, [bookingData]);
+
+  useEffect(() => {
+    // fetchData();
+    dispatch(fetchBookingRoom(bookingPayload));
+  }, [bookingPayload?.roomRequestList, dispatch]);
+
+  const handleRetry = () => {
+    fetchData();
+  };
   // Reset paymentData khi vào màn hình
   useEffect(() => {
     dispatch(resetPaymentData());
@@ -93,11 +164,7 @@ const OrderConfirmScreen = ({ navigation }) => {
     }
   }, [paymentData, loadingPayment, error, navigation]);
 
-  // Gọi fetchBookingRoom khi bookingPayload thay đổi
-  useEffect(() => {
-    dispatch(fetchBookingRoom(bookingPayload));
-  }, [bookingPayload?.roomRequestList, dispatch]);
-
+  // trả về thể loại của dịch vụ
   const getUniqueServiceTypes = (serviceSelect) => {
     const serviceTypes = new Set(
       serviceSelect?.map((service) => service.serviceType) || []
@@ -105,35 +172,48 @@ const OrderConfirmScreen = ({ navigation }) => {
     return Array.from(serviceTypes);
   };
 
+  // điều hướng tới orderFood
   const handleToOrderFood = () => {
     dispatch(setNavigateFoodCart("OrderConfirm"));
     navigation.navigate("OrderFood", { prePage: "OrderConfirm" });
   };
 
+  // điều hướng tới Giảm giá 😡
   const handleToSale = () => {
     const totalPrice =
       +bookingData?.totalPriceRoom + +bookingData?.totalPriceService;
     const code = bookingPayload?.couponId;
-    dispatch(fetchListPromotion({ code, totalPrice }));
-    navigation.navigate("Discount", { prePage: "OrderConfirm" });
+    // dispatch(fetchListPromotion({ code, totalPrice }));
+    navigation.navigate("Discount", {
+      prePage: "OrderConfirm",
+      code: code,
+      totalPrice: totalPrice,
+    });
   };
 
   const handlePayment = async () => {
     setIsLoading(true);
     try {
-      await dispatch(fetchPaymentOrder(bookingPayload)).unwrap();
-      console.log("Dữ liệu gửi lên API:", bookingPayload);
+      await Promise.all([fetchPayment()]);
     } catch (error) {
-      console.error("Payment error:", error);
-      Alert.alert("Lỗi", error.message || "Lỗi tạo thanh toán");
+      console.log("Failed to fetch data in OrderConfirm :", error);
+      showToast({
+        type: "error",
+        text1: "Lỗi tải dữ liệu",
+        text2: "Không thể tải dữ liệu chi tiết hóa đơn .",
+        position: "top",
+        duration: 3000,
+      });
       setIsLoading(false);
     }
   };
 
+  // điều hướng tới chính sách
   const handleToPolicy = (item) => {
     navigation.navigate("AllPolicy", { data: item?.policyBooked });
   };
 
+  // render danh sách phòng
   const renderListRoom = (item) => (
     <View style={styles.roomWrapper}>
       <View style={styles.roomInfo}>
@@ -158,7 +238,7 @@ const OrderConfirmScreen = ({ navigation }) => {
         </View>
         <View style={styles.serviceIcons}>
           {item?.serviceSelect?.length > 0 ? (
-            getUniqueServiceTypes(item.serviceSelect).map((type) => (
+            getUniqueServiceTypes(item?.serviceSelect).map((type) => (
               <TouchableOpacity
                 key={type}
                 style={styles.iconWrapper}
@@ -197,7 +277,7 @@ const OrderConfirmScreen = ({ navigation }) => {
     </View>
   );
 
-  if (loadingBookingRoom) {
+  if (loadingBR) {
     return <SkeletonOrderConfirm />;
   }
 
@@ -260,15 +340,26 @@ const OrderConfirmScreen = ({ navigation }) => {
           <View style={styles.br} />
         </View>
 
-        <View style={styles.roomsSection}>
-          <Text style={styles.subTitle}>Phòng đặt</Text>
-          <ScrollView showsVerticalScrollIndicator={false}>
-            {listRoom?.map((item, index) => (
-              <View key={item.uniqueId}>{renderListRoom(item)}</View>
-            ))}
-          </ScrollView>
-          <View style={styles.br} />
-        </View>
+        {errorBR === null ? (
+          <View style={styles.roomsSection}>
+            <Text style={styles.subTitle}>Phòng đặt</Text>
+            <ScrollView showsVerticalScrollIndicator={false}>
+              {listRoom?.map((item, index) => (
+                <View key={item?.uniqueId}>{renderListRoom(item)}</View>
+              ))}
+            </ScrollView>
+            <View style={styles.br} />
+          </View>
+        ) : (
+          <View style={styles.sectionErorHL}>
+            <TouchableOpacity
+              style={styles.errorHL}
+              onPress={() => handleRetry()}
+            >
+              <Text style={styles.errorHLText}>Thử lại </Text>
+            </TouchableOpacity>
+          </View>
+        )}
 
         <View style={styles.headerSection}>
           <View style={styles.infoSection}>
@@ -555,5 +646,24 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#007AFF",
     borderRadius: 8,
+  },
+  sectionErorHL: {
+    justifyContent: "center",
+    alignItems: "center",
+    height: 150,
+    backgroundColor: "white",
+  },
+  errorHL: {
+    backgroundColor: "white",
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "gray",
+    padding: 20,
+    paddingVertical: 10,
+  },
+  errorHLText: {
+    color: "gray",
+    fontSize: 16,
+    fontWeight: "400",
   },
 });
