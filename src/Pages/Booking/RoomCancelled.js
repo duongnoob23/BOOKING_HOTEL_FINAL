@@ -18,16 +18,6 @@ import { getBookingDetails } from "../../Redux/Slice/bookingSlice";
 
 const RoomCancelled = ({ navigation }) => {
   const dispatch = useAppDispatch();
-  const { accessToken, isLoggedIn } = useAppSelector((state) => state.auth);
-  // if (!accessToken && !isLoggedIn) {
-  //   return (
-  //     <View style={styles.RequireLogin}>
-  //       <Text style={styles.RequireLoginText}>
-  //         Bạn cần đăng nhập để xem tính năng này
-  //       </Text>
-  //     </View>
-  //   );
-  // }
 
   const { bookingStatus, loadingBookingStatus } = useAppSelector(
     (state) => state.hotel
@@ -41,8 +31,22 @@ const RoomCancelled = ({ navigation }) => {
   };
   const handleToBookingDetail = (item) => {
     // console.log("item.bookingId", item.bookingId);
-    dispatch(getBookingDetails(item.bookingId));
-    navigation.navigate("BookingHistoryDetails", { type: "Cancelled" });
+
+    if (item && item?.bookingId) {
+      navigation.navigate("BookingHistoryDetails", {
+        type: "Cancelled",
+        id: item?.bookingId,
+      });
+    } else {
+      showToast({
+        type: "error",
+        text1: "Lỗi thiếu dữ liệu ",
+        text2: "Không có dữ liệu BookingId",
+        position: "top",
+        duration: 3000,
+      });
+      return;
+    }
   };
   const renderBookingItem = ({ item }) => (
     <TouchableOpacity

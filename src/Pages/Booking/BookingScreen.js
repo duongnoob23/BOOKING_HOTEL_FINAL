@@ -18,29 +18,61 @@ import RoomBooked from "./RoomBooked";
 import RoomCheckedOut from "./RoomCheckedOut";
 import { useAppDispatch, useAppSelector } from "../../Redux/hook";
 import { fetchBookingStatus } from "../../Redux/Slice/hotelSlice";
+import { showToast } from "../../Utils/toast";
 
 const BookingScreen = ({ navigation }) => {
-  const { bookingStatus, loadingBookingStatus } = useAppSelector(
+  // Lấy dữ liệu redux
+  const { bookingStatus, loadingBS, errorBS } = useAppSelector(
     (state) => state.hotel
   );
   const { accessToken, isLoggedIn } = useAppSelector((state) => state.auth);
   const dispatch = useAppDispatch();
   const Tab = createMaterialTopTabNavigator();
-  const [css, setCss] = useState(1);
-  const bookings = [
-    {
-      id: "1",
-      image:
-        "https://media.istockphoto.com/id/2148367059/fr/photo/la-ligne-dhorizon-c%C3%B4ti%C3%A8re-de-dakar-s%C3%A9n%C3%A9gal-afrique-de-louest.webp?a=1&b=1&s=612x612&w=0&k=20&c=gAwIfTVBEupXPG_K5DoK1k4kpJ_m7SkDF_UlkLrIcGk=",
-      name: "Heden golf",
-      rating: 3.9,
-      reviews: 200,
-      date: "23 - 7 - 2019",
-      discount: "25% OFF",
-      price: 127,
-    },
-  ];
 
+  const fetchBooking = async (retryCount = 1, delay = 1000) => {
+    for (let attempt = 1; attempt <= retryCount; attempt++) {
+      try {
+        // console.log("goi try catch lan 1");
+        await dispatch(fetchBookingStatus()).unwrap();
+        return;
+      } catch (error) {
+        showToast({
+          type: "error",
+          text1: "Lỗi tải dữ liệu",
+          text2: "Không thể tải dữ liệu Booking ",
+          position: "top",
+          duration: 3000,
+        });
+        console.log(
+          `Attempt ${attempt} failed to fetch booking status :`,
+          error
+        );
+        if (attempt === retryCount) {
+          throw error;
+        }
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+      }
+    }
+  };
+
+  const fetchData = async () => {
+    try {
+      await Promise.all([fetchBooking()]);
+    } catch (error) {
+      console.log("Failed to fetch data in BookingScreen:", error);
+      showToast({
+        type: "error",
+        text1: "Lỗi tải dữ liệu",
+        text2: "Không thể tải dữ liệu Booking ",
+        position: "top",
+        duration: 3000,
+      });
+    }
+  };
+
+  const handleRetry = () => {
+    fetchData();
+  };
   // Chỉ gọi API khi người dùng đã đăng nhập
   useEffect(() => {
     if (accessToken && isLoggedIn) {
@@ -67,7 +99,7 @@ const BookingScreen = ({ navigation }) => {
   }
 
   // Kiểm tra dữ liệu đang tải hoặc chưa có
-  if (loadingBookingStatus || !bookingStatus) {
+  if (loadingBS || !bookingStatus) {
     return (
       <View style={styles.emptyContainer}>
         <Text style={styles.emptyText}>Đang tải...</Text>
@@ -151,9 +183,19 @@ const BookingScreen = ({ navigation }) => {
     );
   };
 
+  if (!errorBS === null) {
+    return (
+      <View style={styles.sectionErorHL}>
+        <TouchableOpacity style={styles.errorHL} onPress={() => handleRetry()}>
+          <Text style={styles.errorHLText}>Thử lại </Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.bookingHistoryScreen}>
-      <View style={styles.bookingHistoryScreen__searchBar}>
+      {/* <View style={styles.bookingHistoryScreen__searchBar}>
         <Ionicons
           name="search"
           size={20}
@@ -173,7 +215,7 @@ const BookingScreen = ({ navigation }) => {
             style={styles.bookingHistoryScreen__clearIcon}
           />
         </TouchableOpacity>
-      </View>
+      </View> */}
 
       <Tab.Navigator
         tabBar={(props) => <CustomTabBar {...props} />}
@@ -209,7 +251,7 @@ const styles = StyleSheet.create({
   bookingHistoryScreen: {
     flex: 1,
     backgroundColor: "#FFFFFF",
-    paddingTop: 40,
+    paddingTop: 10,
     paddingHorizontal: 15,
   },
   bookingHistoryScreen__searchBar: {
@@ -276,6 +318,26 @@ const styles = StyleSheet.create({
     color: "#888888",
     textAlign: "center",
     marginTop: 20,
+  },
+  sectionErorHL: {
+    justifyContent: "center",
+    alignItems: "center",
+    // height: 100,
+    backgroundColor: "white",
+    flex: 1,
+  },
+  errorHL: {
+    backgroundColor: "E5E5E5",
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "gray",
+    padding: 20,
+    paddingVertical: 10,
+  },
+  errorHLText: {
+    color: "gray",
+    fontSize: 16,
+    fontWeight: "400",
   },
 });
 

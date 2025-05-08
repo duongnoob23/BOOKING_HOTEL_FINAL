@@ -16,16 +16,6 @@ import { useAppDispatch, useAppSelector } from "../../Redux/hook";
 import { formatPrice } from "../../Utils/formarPrice";
 import { getBookingDetails } from "../../Redux/Slice/bookingSlice";
 const RoomBooking = () => {
-  const { accessToken, isLoggedIn } = useAppSelector((state) => state.auth);
-  // if (!accessToken && !isLoggedIn) {
-  //   return (
-  //     <View style={styles.RequireLogin}>
-  //       <Text style={styles.RequireLoginText}>
-  //         Bạn cần đăng nhập để xem tính năng này
-  //       </Text>
-  //     </View>
-  //   );
-  // }
   const { bookingStatus, loadingBookingStatus } = useAppSelector(
     (state) => state.hotel
   );
@@ -33,8 +23,22 @@ const RoomBooking = () => {
   const bookings = bookingStatus?.CHECKIN || [];
   const handleToBookingDetail = (item) => {
     // console.log("item.bookingId", item.bookingId);
-    dispatch(getBookingDetails(item.bookingId));
-    navigation.navigate("BookingHistoryDetails", { type: "Booking" });
+
+    if (item && item?.bookingId) {
+      navigation.navigate("BookingHistoryDetails", {
+        type: "Booking",
+        id: item?.bookingId,
+      });
+    } else {
+      showToast({
+        type: "error",
+        text1: "Lỗi thiếu dữ liệu ",
+        text2: "Không có dữ liệu BookingId",
+        position: "top",
+        duration: 3000,
+      });
+      return;
+    }
   };
   const renderBookingItem = ({ item }) => (
     <TouchableOpacity

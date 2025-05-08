@@ -93,6 +93,9 @@ const initValue = {
   bookingDetailData: [],
   loadingCancel: false,
   myVoucherData: [],
+  // quản lý trạng thái getBookingDetails
+  loadingBD: false,
+  errorBD: null,
 };
 
 const bookingSlice = createSlice({
@@ -102,17 +105,18 @@ const bookingSlice = createSlice({
   extraReducers: (builder) => {
     builder
       .addCase(getBookingDetails.pending, (state) => {
-        state.loadingBookingDetail = true;
-        state.error = null;
+        state.loadingBD = true;
+        state.errorBD = null;
       })
       .addCase(getBookingDetails.fulfilled, (state, action) => {
         console.log(">>> 78 AS >>>", action.payload);
-        state.loadingBookingDetail = false;
+        state.loadingBD = false;
         state.bookingDetailData = action.payload;
+        state.errorBD = null;
       })
       .addCase(getBookingDetails.rejected, (state, action) => {
-        state.loadingBookingDetail = false;
-        state.error = action.payload || action.error.message;
+        state.loadingBD = false;
+        state.errorBD = action.payload || action.error.message;
       })
       .addCase(fetchConfirmBookingCancelled.pending, (state) => {
         state.loadingCancel = true;

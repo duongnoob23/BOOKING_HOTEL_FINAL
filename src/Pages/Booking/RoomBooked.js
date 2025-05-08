@@ -15,10 +15,9 @@ import { useState } from "react";
 import { useAppDispatch, useAppSelector } from "../../Redux/hook";
 import { formatPrice } from "../../Utils/formarPrice";
 import { getBookingDetails } from "../../Redux/Slice/bookingSlice";
+import { showToast } from "../../Utils/toast";
 
 const RoomBooked = ({ navigation }) => {
-  const { accessToken, isLoggedIn } = useAppSelector((state) => state.auth);
-
   const { bookingStatus, loadingBookingStatus } = useAppSelector(
     (state) => state.hotel
   );
@@ -31,8 +30,21 @@ const RoomBooked = ({ navigation }) => {
 
   const handleToBookingDetail = (item) => {
     // console.log("item.bookingId", item.bookingId);
-    dispatch(getBookingDetails(item.bookingId));
-    navigation.navigate("BookingHistoryDetails", { type: "Booked" });
+    if (item && item?.bookingId) {
+      navigation.navigate("BookingHistoryDetails", {
+        type: "Booked",
+        id: item?.bookingId,
+      });
+    } else {
+      showToast({
+        type: "error",
+        text1: "Lỗi thiếu dữ liệu ",
+        text2: "Không có dữ liệu BookingId",
+        position: "top",
+        duration: 3000,
+      });
+      return;
+    }
   };
 
   const renderBookingItem = ({ item }) => (

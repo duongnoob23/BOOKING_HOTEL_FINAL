@@ -24,11 +24,15 @@ import {
   resetPaymentData,
 } from "../../Redux/Slice/paymentSlice";
 import ModalBookingCancelled from "../../Components/Modal/Booking/ModalBookingCancelled";
+import { showToast } from "../../Utils/toast";
+import { getBookingDetails } from "../../Redux/Slice/bookingSlice";
 
 const BookingHistoryDetails = ({ navigation, route }) => {
   const type = route?.params?.type;
+  const id = route?.params?.id;
+  console.log("28>>>", id);
   const dispatch = useAppDispatch();
-  const { bookingDetailData, loadingBookingDetail } = useAppSelector(
+  const { bookingDetailData, loadingBD, errorBD } = useAppSelector(
     (state) => state.booking
   );
 
@@ -43,14 +47,67 @@ const BookingHistoryDetails = ({ navigation, route }) => {
     return Array.from(serviceTypes);
   };
 
-  const handleToSale = () => {
-    const totalPrice =
-      +bookingDetailData?.totalPriceRoom +
-      +bookingDetailData?.totalPriceService;
-    const code = "";
-    dispatch(fetchListPromotion({ code, totalPrice }));
-    navigation.navigate("Discount", { prePage: "OrderConfirm" });
+  const fetchDetails = async (retryCount = 1, delay = 1000) => {
+    for (let attempt = 1; attempt <= retryCount; attempt++) {
+      try {
+        // console.log("goi try catch lan 1");
+        await dispatch(getBookingDetails(id)).unwrap();
+        return;
+      } catch (error) {
+        showToast({
+          type: "error",
+          text1: "Lỗi tải dữ liệu",
+          text2: "Không thể dữ liệu chi tiết đơn đặt ",
+          position: "top",
+          duration: 3000,
+        });
+        console.error(
+          `Attempt ${attempt} failed to fetch Booking details:`,
+          error
+        );
+        if (attempt === retryCount) {
+          throw error;
+        }
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+      }
+    }
   };
+
+  const fetchData = async () => {
+    try {
+      await Promise.all([fetchDetails()]);
+    } catch (error) {
+      console.log("Failed to fetch data in BookingHistoryDetails:", error);
+      showToast({
+        type: "error",
+        text1: "Lỗi tải dữ liệu",
+        text2: "Không thể tải dữ liệu chi tiết đơn đặt ",
+        position: "top",
+        duration: 3000,
+      });
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, [dispatch]);
+
+  const handleRetry = () => {
+    fetchData();
+  };
+
+  if (loadingBD) {
+    return <SkeletonOrderConfirm />;
+  }
+
+  const handleConfirmCancelled = () => {
+    console.log("heelo");
+  };
+
+  const handleToBookingScreen = () => {
+    navigation.navigate("BookingScreen");
+  };
+  console.log("BBBBBBBBBBBBBBBBBBBBBBB", bookingDetailData);
 
   const renderListRoom = (item) => (
     <View style={styles.roomWrapper}>
@@ -106,72 +163,6 @@ const BookingHistoryDetails = ({ navigation, route }) => {
     </View>
   );
 
-  if (loadingBookingDetail) {
-    return <SkeletonOrderConfirm />;
-  }
-
-  const handleConfirmCancelled = () => {
-    console.log("heelo");
-  };
-
-  const handleToBookingScreen = () => {
-    navigation.navigate("BookingScreen");
-  };
-  console.log("BBBBBBBBBBBBBBBBBBBBBBB", bookingDetailData);
-  // const test = {
-  //   bookingId: 198,
-  //   bookingStatus: "BOOKED",
-  //   checkIn: "22-09-2025 14:20:00",
-  //   checkOut: "23-09-2025 12:20:00",
-  //   finalPrice: "1060000.00",
-  //   hotelAddress: "Hà Nội",
-  //   hotelId: 2,
-  //   hotelName: "Onomo",
-  //   paymentDeposit: "530000.00",
-  //   policyList: [
-  //     {
-  //       condition: "12",
-  //       description: "Không hoàn tiền nếu hủy trong vòng 12 giờ trước check-in",
-  //       id: 9,
-  //       name: "Không hoàn tiền",
-  //       operator: "after",
-  //       type: "CANCEL",
-  //       value: "0%",
-  //     },
-  //     {
-  //       condition: "13",
-  //       description: "Không hoàn tiền nếu hủy trong vòng 12 giờ trước check-in",
-  //       id: 9,
-  //       name: "Không hoàn tiền",
-  //       operator: "after",
-  //       type: "CANCEL",
-  //       value: "0%",
-  //     },
-  //     {
-  //       condition: "14",
-  //       description: "Không hoàn tiền nếu hủy trong vòng 12 giờ trước check-in",
-  //       id: 9,
-  //       name: "Không hoàn tiền",
-  //       operator: "after",
-  //       type: "CANCEL",
-  //       value: "0%",
-  //     },
-  //   ],
-  //   priceCoupon: "20000.00",
-  //   roomBookedList: [
-  //     {
-  //       adults: 1,
-  //       priceRoom: 1080000,
-  //       priceService: 70000,
-  //       roomId: 2,
-  //       roomName: "Phòng Deluxe Gia đình VIP",
-  //       serviceSelect: [Array],
-  //     },
-  //   ],
-  //   totalAdults: 1,
-  //   totalPriceRoom: "1080000.00",
-  //   totalPriceService: "70000.00",
-  // };
   return (
     <View style={styles.container}>
       <ScrollView showsHorizontalScrollIndicator={false}>
@@ -232,7 +223,7 @@ const BookingHistoryDetails = ({ navigation, route }) => {
             <Text style={styles.infoLabel}>Mã giảm giá</Text>
             <TouchableOpacity
               style={styles.wrapperInfoValueSale}
-              onPress={handleToSale}
+              // onPress={handleToSale}
             >
               <Ionicons name="bookmark-outline" size={18} color="#007AFF" />
               <Text style={styles.infoValueSale}>couponCode</Text>

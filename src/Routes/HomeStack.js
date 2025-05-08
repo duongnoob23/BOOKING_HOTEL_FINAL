@@ -105,14 +105,7 @@ const HomeStackNavigator = () => {
           tabBarVisible: false, // Ẩn thanh tab dưới cùng
         }}
       />
-      <Stack.Screen
-        name="RateApp"
-        component={RateApp}
-        options={{
-          headerShown: false,
-          tabBarVisible: false, // Ẩn thanh tab dưới cùng
-        }}
-      />
+
       <Stack.Screen
         name="ListHotelLocation"
         component={ListHotelByLocation}

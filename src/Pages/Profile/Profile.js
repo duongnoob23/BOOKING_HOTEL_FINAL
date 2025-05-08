@@ -61,28 +61,30 @@ const Profile = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      <View style={styles.topContainer}>
-        <Image
-          source={{ uri: displayData.image }}
-          style={styles.profileImage}
-        />
-      </View>
+      {isLoggedIn && (
+        <View style={styles.topContainer}>
+          <Image
+            source={{ uri: displayData.image }}
+            style={styles.profileImage}
+          />
+        </View>
+      )}
 
-      <View style={styles.profileCard}>
-        {isLoggedIn && (
+      {isLoggedIn && (
+        <View style={styles.profileCard}>
           <TouchableOpacity
             style={styles.editButton}
             onPress={handleToEditProfile}
           >
             <Ionicons name="pencil" size={26} color="white" />
           </TouchableOpacity>
-        )}
-        <Text style={styles.userName}>
-          {displayData.firstName} {displayData.lastName}
-        </Text>
-        <Text style={styles.userEmail}>{displayData.email}</Text>
-        <Text style={styles.userPhone}>{displayData.phone}</Text>
-      </View>
+          <Text style={styles.userName}>
+            {displayData.firstName} {displayData.lastName}
+          </Text>
+          <Text style={styles.userEmail}>{displayData.email}</Text>
+          <Text style={styles.userPhone}>{displayData.phone}</Text>
+        </View>
+      )}
 
       <View style={styles.optionsContainer}>
         {isLoggedIn ? (
@@ -206,6 +208,7 @@ const styles = StyleSheet.create({
   },
   logoutButton: {
     backgroundColor: "#00F598",
+    backgroundColor: "red",
     padding: 15,
     borderRadius: 10,
     alignItems: "center",

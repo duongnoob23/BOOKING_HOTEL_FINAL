@@ -18,6 +18,7 @@ import {
   updateLoadingSendReview,
 } from "../../Redux/Slice/hotelSlice";
 import { useAppDispatch, useAppSelector } from "../../Redux/hook";
+import { showToast } from "../../Utils/toast";
 
 const RateApp = ({ navigation, route }) => {
   const hotel = route?.params?.item || [];
@@ -38,6 +39,9 @@ const RateApp = ({ navigation, route }) => {
   const { loadingSendReview, sendReviewSuccess, sendReviewError } =
     useAppSelector((state) => state.hotel);
 
+  const { bookingDetailData } = useAppSelector((state) => state.booking);
+
+  console.log("25BKD", bookingDetailData);
   // Xử lý chọn sao
   const handleRating = (criterion, value) => {
     setRatings((prev) => ({
@@ -119,12 +123,12 @@ const RateApp = ({ navigation, route }) => {
 
   const handleSubmit = () => {
     const reviewData = {
-      hotelId: "1",
-      bookingId: hotel.bookingId,
-      hotelPoint: ratings.hotel.toString(),
-      roomPoint: ratings.room.toString(),
-      locationPoint: ratings.location.toString(),
-      servicePoint: ratings.service.toString(),
+      hotelId: hotel?.hotelId,
+      bookingId: hotel?.bookingId,
+      hotelPoint: ratings?.hotel.toString(),
+      roomPoint: ratings?.room.toString(),
+      locationPoint: ratings?.location.toString(),
+      servicePoint: ratings?.service.toString(),
       comment: comment,
       image: images,
     };
@@ -148,13 +152,27 @@ const RateApp = ({ navigation, route }) => {
   // Theo dõi trạng thái gửi review để hiển thị thông báo và điều hướng
   useEffect(() => {
     if (sendReviewSuccess) {
-      alert("Gửi đánh giá thành công!");
+      showToast({
+        type: "success",
+        text1: "Thành công🥰",
+        text2: "Gửi đánh giá thành công!",
+        position: "top",
+        duration: 3000,
+      });
+      // alert("Gửi đánh giá thành công!");
       resetUserInput(); // Reset dữ liệu người dùng
       dispatch(resetSendReviewState());
       navigation.navigate("BookingScreen");
     }
     if (sendReviewError) {
-      alert(`Lỗi: ${sendReviewError}`);
+      showToast({
+        type: "error",
+        text1: "Thất bại 😡 ",
+        text2: `Lỗi: ${sendReviewError}`,
+        position: "top",
+        duration: 3000,
+      });
+      // alert(`Lỗi: ${sendReviewError}`);
       dispatch(resetSendReviewState());
       // Điều hướng về BookingScreen nếu có lỗi
       navigation.navigate("BookingScreen");
@@ -287,7 +305,7 @@ const RateApp = ({ navigation, route }) => {
           disabled={loadingSendReview}
         >
           <Text style={styles.buttonText}>
-            {loadingSendReview ? "Đang gửi..." : "Xác nhận"}
+            {loadingSendReview ? "Đang gửi..." : "Đánh giá"}
           </Text>
         </TouchableOpacity>
       </View>

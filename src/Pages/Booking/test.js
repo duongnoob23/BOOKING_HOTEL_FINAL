@@ -1,3 +1,58 @@
+// const test = {
+//   bookingId: 198,
+//   bookingStatus: "BOOKED",
+//   checkIn: "22-09-2025 14:20:00",
+//   checkOut: "23-09-2025 12:20:00",
+//   finalPrice: "1060000.00",
+//   hotelAddress: "Hà Nội",
+//   hotelId: 2,
+//   hotelName: "Onomo",
+//   paymentDeposit: "530000.00",
+//   policyList: [
+//     {
+//       condition: "12",
+//       description: "Không hoàn tiền nếu hủy trong vòng 12 giờ trước check-in",
+//       id: 9,
+//       name: "Không hoàn tiền",
+//       operator: "after",
+//       type: "CANCEL",
+//       value: "0%",
+//     },
+//     {
+//       condition: "13",
+//       description: "Không hoàn tiền nếu hủy trong vòng 12 giờ trước check-in",
+//       id: 9,
+//       name: "Không hoàn tiền",
+//       operator: "after",
+//       type: "CANCEL",
+//       value: "0%",
+//     },
+//     {
+//       condition: "14",
+//       description: "Không hoàn tiền nếu hủy trong vòng 12 giờ trước check-in",
+//       id: 9,
+//       name: "Không hoàn tiền",
+//       operator: "after",
+//       type: "CANCEL",
+//       value: "0%",
+//     },
+//   ],
+//   priceCoupon: "20000.00",
+//   roomBookedList: [
+//     {
+//       adults: 1,
+//       priceRoom: 1080000,
+//       priceService: 70000,
+//       roomId: 2,
+//       roomName: "Phòng Deluxe Gia đình VIP",
+//       serviceSelect: [Array],
+//     },
+//   ],
+//   totalAdults: 1,
+//   totalPriceRoom: "1080000.00",
+//   totalPriceService: "70000.00",
+// };
+
 const test = {
   statusCode: 200,
   message: "History booking successfully",

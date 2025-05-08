@@ -18,16 +18,6 @@ import { getBookingDetails } from "../../Redux/Slice/bookingSlice";
 
 const RoomCheckedOut = ({ navigation }) => {
   const dispatch = useAppDispatch();
-  const { accessToken, isLoggedIn } = useAppSelector((state) => state.auth);
-  // if (!accessToken && !isLoggedIn) {
-  //   return (
-  //     <View style={styles.RequireLogin}>
-  //       <Text style={styles.RequireLoginText}>
-  //         Bạn cần đăng nhập để xem tính năng này
-  //       </Text>
-  //     </View>
-  //   );
-  // }
 
   const { bookingStatus, loadingBookingStatus } = useAppSelector(
     (state) => state.hotel
@@ -43,12 +33,37 @@ const RoomCheckedOut = ({ navigation }) => {
 
   const handleReviewHotel = (item) => {
     console.log(item);
-    navigation.navigate("RateApp", { item: item });
+    if (item) {
+      navigation.navigate("RateApp", { item: item });
+    } else {
+      showToast({
+        type: "error",
+        text1: "Lỗi thiếu dữ liệu ",
+        text2: "Không có dữ liệu RateApp",
+        position: "top",
+        duration: 3000,
+      });
+      return;
+    }
   };
   const handleToBookingDetail = (item) => {
     // console.log("item.bookingId", item.bookingId);
-    dispatch(getBookingDetails(item.bookingId));
-    navigation.navigate("BookingHistoryDetails", { type: "CheckedOut" });
+
+    if (item && item?.bookingId) {
+      navigation.navigate("BookingHistoryDetails", {
+        type: "CheckedOut",
+        id: item?.bookingId,
+      });
+    } else {
+      showToast({
+        type: "error",
+        text1: "Lỗi thiếu dữ liệu ",
+        text2: "Không có dữ liệu BookingId",
+        position: "top",
+        duration: 3000,
+      });
+      return;
+    }
   };
   const renderBookingItem = ({ item }) => (
     <TouchableOpacity

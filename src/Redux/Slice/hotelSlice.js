@@ -512,6 +512,9 @@ const hotelSlice = createSlice({
     // quản lý trạng thái fetchBookingRoom
     loadingBR: false,
     errorBR: null,
+    // quản lý trạng thái fetchBookingStatus
+    loadingBS: false,
+    errorBS: null,
   },
   reducers: {
     updateRoomQuantities(state, action) {
@@ -799,11 +802,11 @@ const hotelSlice = createSlice({
         state.errorSL = action.payload || action.error.message;
       })
       .addCase(fetchBookingStatus.pending, (state) => {
-        state.loadingBookingStatus = true;
-        state.error = null;
+        state.loadingBS = true;
+        state.errorBS = null;
       })
       .addCase(fetchBookingStatus.fulfilled, (state, action) => {
-        state.loadingBookingStatus = false;
+        state.loadingBS = false;
         state.bookingStatus.BOOKED =
           action.payload?.[0]?.hotelBookingList || [];
         state.bookingStatus.CHECKIN =
@@ -812,10 +815,11 @@ const hotelSlice = createSlice({
           action.payload?.[2]?.hotelBookingList || [];
         state.bookingStatus.CANCELED =
           action.payload?.[3]?.hotelBookingList || [];
+        state.errorBS = null;
       })
       .addCase(fetchBookingStatus.rejected, (state, action) => {
-        state.loadingBookingStatus = false;
-        state.error = action.payload || action.error.message;
+        state.loadingBS = false;
+        state.errorBS = action.payload || action.error.message;
       })
       .addCase(getReviewDetails.pending, (state) => {
         state.loadingReviewDetails = true;

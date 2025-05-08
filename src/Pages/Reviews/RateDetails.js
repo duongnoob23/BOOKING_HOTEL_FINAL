@@ -10,12 +10,16 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { useAppSelector } from "../../Redux/hook";
 
-const RateApp = ({ navigation, route }) => {
+const RateDetails = ({ navigation, route }) => {
   const username = route?.params?.name || "";
   console.log(route.params);
   const { reviewDetailsData, loadingReviewDetails } = useAppSelector(
     (state) => state.hotel
   );
+
+  const { bookingDetailData } = useAppSelector((state) => state.booking);
+
+  console.log("25BKD", bookingDetailData);
   console.log("reviewDetailsData", reviewDetailsData);
 
   // State cho đánh giá và nhận xét
@@ -258,4 +262,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default RateApp;
+export default RateDetails;
