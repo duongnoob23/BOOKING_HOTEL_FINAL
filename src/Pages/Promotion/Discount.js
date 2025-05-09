@@ -22,7 +22,7 @@ const Discount = ({ navigation, route }) => {
   const { bookingPayload } = useAppSelector((state) => state.hotel);
   const { accessToken, isLoggedIn } = useAppSelector((state) => state.auth);
   const dispatch = useAppDispatch();
-
+  console.log(accessToken);
   // Sắp xếp danh sách để mã đang dùng (dựa trên bookingPayload.couponId) lên đầu
   const sortedPromotions = [...listPromotion].sort((a, b) => {
     if (a.id === bookingPayload?.couponId) return -1;

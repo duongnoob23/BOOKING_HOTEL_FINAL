@@ -21,6 +21,7 @@ import {
   update,
   updateBookingPayload,
   updateRoomNumber,
+  updateRoomQuantities,
   uppdateListUniqueIdBookingRoom,
 } from "../../Redux/Slice/hotelSlice";
 import { fetchServicesByCategory } from "../../Redux/Slice/serviceSlice";
@@ -111,7 +112,8 @@ const HotelRoomList = ({ navigation, route }) => {
       hotelId: hotelDetailId,
       checkInDate: inforFilter?.checkin,
       checkOutDate: inforFilter?.checkout,
-      couponId: 0,
+      couponId: 1,
+      couponCode: "",
       roomRequestList: [],
     };
     dispatch(updateBookingPayload(bookingPayload_));
@@ -217,6 +219,7 @@ const HotelRoomList = ({ navigation, route }) => {
       });
       return acc;
     }, []);
+    dispatch(updateRoomQuantities(roomQuantities));
 
     dispatch(fetchServicesByCategory(roomQuantities));
     navigation.navigate("InfoConfirm");
@@ -241,8 +244,7 @@ const HotelRoomList = ({ navigation, route }) => {
       });
       return acc;
     }, []);
-    console.log("22>>>", roomQuantities);
-    // dispatch(updateRoomQuantities(roomQuantities));
+    dispatch(updateRoomQuantities(roomQuantities));
 
     dispatch(fetchServicesByCategory(roomQuantities));
     navigation.navigate("OrderFood");

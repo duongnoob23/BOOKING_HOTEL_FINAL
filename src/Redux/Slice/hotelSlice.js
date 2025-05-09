@@ -835,12 +835,12 @@ const hotelSlice = createSlice({
       })
       .addCase(sendReview.pending, (state) => {
         state.loadingSendReview = true;
-        state.sendReviewError = null;
         state.sendReviewSuccess = false;
+        state.sendReviewError = null;
       })
       .addCase(sendReview.fulfilled, (state) => {
-        state.loadingSendReview = false;
         state.sendReviewSuccess = true;
+        state.loadingSendReview = false;
       })
       .addCase(sendReview.rejected, (state, action) => {
         state.loadingSendReview = false;

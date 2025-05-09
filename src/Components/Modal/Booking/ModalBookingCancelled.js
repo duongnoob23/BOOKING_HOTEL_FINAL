@@ -8,11 +8,13 @@ import {
   Modal,
   TextInput,
   Alert,
+  ActivityIndicator,
 } from "react-native";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import { useAppDispatch, useAppSelector } from "../../../Redux/hook";
 import { fetchConfirmBookingCancelled } from "../../../Redux/Slice/bookingSlice";
 import { fetchBookingStatus } from "../../../Redux/Slice/hotelSlice";
+import { showToast } from "../../../Utils/toast";
 
 const ModalBookingCancelled = ({
   visible,
@@ -26,42 +28,110 @@ const ModalBookingCancelled = ({
   const bookingStatus = useAppSelector((state) => state.booking);
   const [cancelReason, setCancelReason] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
   const dispatch = useAppDispatch();
 
-  const handleConfirmCancelled = () => {
+  const fetchConfirmBooking = async (retryCount = 1, delay = 1000) => {
+    for (let attempt = 1; attempt <= retryCount; attempt++) {
+      try {
+        const value = {
+          bookingId: bookingId,
+          reason: cancelReason,
+        };
+        console.log("bookingId", bookingId);
+        console.log("Xác nhận hủy phòng với lý do:", cancelReason);
+        // console.log("goi try catch lan 1");
+        await dispatch(fetchConfirmBookingCancelled(value)).unwrap();
+        return;
+      } catch (error) {
+        showToast({
+          type: "error",
+          text1: "Lỗi Không thể hủy đặt phòng",
+          text2: "Không thể hủy phòng vừa chọn ",
+          position: "top",
+          duration: 3000,
+        });
+        console.log(
+          `Attempt ${attempt} failed to fetch room cancelled:`,
+          error
+        );
+        if (attempt === retryCount) {
+          throw error;
+        }
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+      }
+    }
+  };
+  const fetchBooking = async (retryCount = 1, delay = 1000) => {
+    for (let attempt = 1; attempt <= retryCount; attempt++) {
+      try {
+        // console.log("goi try catch lan 1");
+        await dispatch(fetchBookingStatus()).unwrap();
+        return;
+      } catch (error) {
+        showToast({
+          type: "error",
+          text1: "Lỗi tải dữ liệu",
+          text2: "Không thể cập nhật trạng thái đặt phòng",
+          position: "top",
+          duration: 3000,
+        });
+        console.log(
+          `Attempt ${attempt} failed to fetch booking status:`,
+          error
+        );
+        if (attempt === retryCount) {
+          throw error;
+        }
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+      }
+    }
+  };
+
+  const fetchData = async () => {
+    try {
+      await Promise.all([fetchConfirmBooking(), fetchBooking()]);
+      return true;
+    } catch (error) {
+      console.log("Failed to fetch data in BookingScreen:", error);
+      showToast({
+        type: "error",
+        text1: "Lỗi tải dữ liệu",
+        text2: "Không thể tải hủy đặt phòng hoặc tải dữ liệu đặt phòng ",
+        position: "top",
+        duration: 3000,
+      });
+      return false;
+    }
+  };
+
+  const handleConfirmCancelled = async () => {
     try {
       if (!cancelReason?.trim()) {
         setError("Vui lòng nhập lý do hủy phòng.");
         return;
       }
-
-      const value = {
-        bookingId: bookingId,
-        reason: cancelReason,
-      };
-
-      console.log("bookingId", bookingId);
-      console.log("Xác nhận hủy phòng với lý do:", cancelReason);
-
-      dispatch(fetchConfirmBookingCancelled(value))
-        .unwrap()
-        .catch((error) => {
-          Alert.alert("Lỗi", `Không thể hủy đặt phòng: ${error.message}`);
+      setLoading(true);
+      const response = await fetchData();
+      if (response) {
+        setError("");
+        setCancelReason("");
+        onClose();
+        handleToBookingScreen();
+        showToast({
+          type: "success",
+          text1: "Thành công!",
+          text2: "Bạn đã hủy phòng thành công 🥰",
+          position: "top",
+          duration: 3000,
         });
+      } else {
+        setLoading(false);
+        return;
+      }
 
-      dispatch(fetchBookingStatus())
-        .unwrap()
-        .catch((error) => {
-          Alert.alert(
-            "Lỗi",
-            `Không thể cập nhật trạng thái đặt phòng: ${error.message}`
-          );
-        });
-
-      setError("");
-      setCancelReason("");
-      onClose();
-      handleToBookingScreen();
+      setLoading(false);
     } catch (error) {
       Alert.alert("Lỗi", `Không thể xử lý hủy phòng: ${error.message}`);
     }
@@ -91,62 +161,72 @@ const ModalBookingCancelled = ({
   };
 
   return (
-    <Modal
-      animationType="fade"
-      transparent={true}
-      visible={visible}
-      onRequestClose={onClose}
-    >
-      <View style={styles.modalOverlay}>
-        <View style={styles.modalContainer}>
-          <View style={styles.header}>
-            <Text style={styles.headerText}>Chính sách hủy phòng</Text>
-            <TouchableOpacity onPress={onClose}>
-              <Ionicons name="close" size={24} color="#000" />
-            </TouchableOpacity>
-          </View>
-          <ScrollView style={styles.policies}>
-            {policyRoomList?.length > 0 ? (
-              <>
-                <Text style={styles.sectionTitle}>Danh sách chính sách</Text>
-                {policyRoomList.map((policy, index) =>
-                  renderPolicyItem(policy, index)
-                )}
-              </>
-            ) : (
-              <Text style={styles.emptyText}>Không có chính sách nào.</Text>
-            )}
-            <View style={styles.reasonContainer}>
-              <Text style={styles.reasonLabel}>Lý do hủy phòng</Text>
-              <TextInput
-                style={[styles.reasonInput, error ? styles.inputError : null]}
-                placeholder="Nhập lý do hủy phòng..."
-                placeholderTextColor="#999"
-                value={cancelReason}
-                onChangeText={(text) => {
-                  setCancelReason(text);
-                  setError("");
-                }}
-                multiline
-                numberOfLines={4}
-              />
-              {error && <Text style={styles.errorText}>{error}</Text>}
+    <>
+      <Modal
+        animationType="fade"
+        transparent={true}
+        visible={visible}
+        onRequestClose={onClose}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <View style={styles.header}>
+              <Text style={styles.headerText}>Chính sách hủy phòng</Text>
+              <TouchableOpacity onPress={onClose}>
+                <Ionicons name="close" size={24} color="#000" />
+              </TouchableOpacity>
             </View>
-          </ScrollView>
-          <View style={styles.footer}>
-            <TouchableOpacity style={styles.cancelButton} onPress={onClose}>
-              <Text style={styles.cancelButtonText}>Hủy</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.applyButton}
-              onPress={handleConfirmCancelled}
-            >
-              <Text style={styles.applyButtonText}>Xác nhận hủy</Text>
-            </TouchableOpacity>
+            <ScrollView style={styles.policies}>
+              {policyRoomList?.length > 0 ? (
+                <>
+                  <Text style={styles.sectionTitle}>Danh sách chính sách</Text>
+                  {policyRoomList.map((policy, index) =>
+                    renderPolicyItem(policy, index)
+                  )}
+                </>
+              ) : (
+                <Text style={styles.emptyText}>Không có chính sách nào.</Text>
+              )}
+              <View style={styles.reasonContainer}>
+                <Text style={styles.reasonLabel}>Lý do hủy phòng</Text>
+                <TextInput
+                  style={[styles.reasonInput, error ? styles.inputError : null]}
+                  placeholder="Nhập lý do hủy phòng..."
+                  placeholderTextColor="#999"
+                  value={cancelReason}
+                  onChangeText={(text) => {
+                    setCancelReason(text);
+                    setError("");
+                  }}
+                  multiline
+                  numberOfLines={4}
+                />
+                {error && <Text style={styles.errorText}>{error}</Text>}
+              </View>
+            </ScrollView>
+            <View style={styles.footer}>
+              <TouchableOpacity style={styles.cancelButton} onPress={onClose}>
+                <Text style={styles.cancelButtonText}>Hủy</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.applyButton}
+                onPress={handleConfirmCancelled}
+              >
+                <Text style={styles.applyButtonText}>Xác nhận hủy</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
-      </View>
-    </Modal>
+      </Modal>
+      <Modal visible={loading} transparent={true} animationType="fade">
+        <View style={styles.modalOverlay1}>
+          <View style={styles.modalContent1}>
+            <ActivityIndicator size="large" color="#00F598" />
+            <Text style={styles.modalText1}>Đang hủy phòng... </Text>
+          </View>
+        </View>
+      </Modal>
+    </>
   );
 };
 
@@ -298,5 +378,22 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#FFF",
     fontWeight: "600",
+  },
+  modalOverlay1: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)", // Màu xám đen, mờ
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalContent1: {
+    backgroundColor: "white",
+    padding: 20,
+    borderRadius: 10,
+    alignItems: "center",
+  },
+  modalText1: {
+    marginTop: 10,
+    fontSize: 16,
+    color: "#333",
   },
 });

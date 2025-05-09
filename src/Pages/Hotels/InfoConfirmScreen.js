@@ -41,7 +41,7 @@ const InfoConfirmScreen = ({ navigation }) => {
     (state) => state.hotel
   );
 
-  console.log("infoUser", infoUser);
+  console.log("bookingPayload >>>>>", bookingPayload);
   console.log("inforUserChange", inforUserChange);
 
   // khởi tạo mảng lưu thông tin người dùng

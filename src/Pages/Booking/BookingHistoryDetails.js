@@ -36,6 +36,7 @@ const BookingHistoryDetails = ({ navigation, route }) => {
     (state) => state.booking
   );
 
+  console.log("31>>>", bookingDetailData);
   const [openModal, setOpenModal] = useState(false);
 
   const listRoom = bookingDetailData?.roomBookedList;

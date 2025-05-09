@@ -183,12 +183,25 @@ const OrderConfirmScreen = ({ navigation }) => {
     const totalPrice =
       +bookingData?.totalPriceRoom + +bookingData?.totalPriceService;
     const code = bookingPayload?.couponId;
+    console.log("30>>>", code, totalPrice);
+    // if (code && code !== 0 && totalPrice >= 0) {
+    if (1) {
+      navigation.navigate("Discount", {
+        prePage: "OrderConfirm",
+        code: code,
+        totalPrice: totalPrice,
+      });
+    } else {
+      showToast({
+        type: "error",
+        text1: "Lỗi thiếu dữ liệu",
+        text2: "Không có Id mã giảm giá hoặc tổng giá ",
+        position: "top",
+        duration: 3000,
+      });
+      return;
+    }
     // dispatch(fetchListPromotion({ code, totalPrice }));
-    navigation.navigate("Discount", {
-      prePage: "OrderConfirm",
-      code: code,
-      totalPrice: totalPrice,
-    });
   };
 
   const handlePayment = async () => {
