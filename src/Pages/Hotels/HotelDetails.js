@@ -256,10 +256,19 @@ const HotelDetails = ({ navigation, route }) => {
 
       {/* Footer với giá và nút "Đặt ngay" */}
       <View style={styles.footer__action}>
-        <Text style={styles.footer__price}>
-          <Text>{hotelDetail?.priceMin || "N/A"}</Text>
-          <Text style={styles.footer__price__text}>TB/ĐÊM</Text>
-        </Text>
+        <View style={styles.footer__price}>
+          <View style={styles.footer__price1}>
+            <Text style={styles.priceNoPromotion}>
+              {hotelDetail?.priceNoPromotion || "N/A"}đ
+            </Text>
+            <Text style={styles.priceMin}>
+              {hotelDetail?.priceMin || "N/A"} đ
+            </Text>
+          </View>
+          <View style={styles.footer__price2}>
+            <Text style={styles.footer__price__text}>TB/ĐÊM</Text>
+          </View>
+        </View>
         <TouchableOpacity
           style={styles.footer__button}
           onPress={handleToHotelRoomList}
@@ -428,19 +437,27 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
   footer__action: {
-    paddingHorizontal: 15,
-    paddingVertical: 5,
+    paddingHorizontal: 8,
+    paddingVertical: 0,
     flexDirection: "row",
     // justifyContent: "space-between",
     alignItems: "center",
+    height: "8%",
   },
   footer__price: {
-    flexDirection: "column",
-
-    fontSize: 22,
-    fontWeight: "bold",
-    color: "black",
     width: "50%",
+    flexDirection: "row",
+    height: "100%",
+  },
+  footer__price1: {
+    width: "70%",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  footer__price2: {
+    width: "30%",
+    justifyContent: "center",
+    alignItems: "center",
   },
   footer__price__text: {
     fontSize: 16,
@@ -510,6 +527,17 @@ const styles = StyleSheet.create({
     color: "gray",
     fontSize: 16,
     fontWeight: "400",
+  },
+  priceNoPromotion: {
+    color: "gray",
+    fontSize: 12,
+    fontWeight: 300,
+    textDecorationLine: "line-through",
+  },
+  priceMin: {
+    color: "black",
+    fontSize: 28,
+    fontWeight: 800,
   },
 });
 

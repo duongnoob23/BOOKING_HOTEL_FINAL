@@ -429,8 +429,8 @@ const hotelSlice = createSlice({
     sortList: [
       { id: 1, name: "Giá tăng dần", key: "price", value: "asc" },
       { id: 2, name: "Giá giảm dần", key: "price", value: "desc" },
-      { id: 3, name: "Đánh giá tăng dần", key: "sumReview", value: "asc" },
-      { id: 4, name: "Đánh giá giảm dần", key: "sumReview", value: "desc" },
+      { id: 3, name: "Đánh giá tăng dần", key: "rating", value: "asc" },
+      { id: 4, name: "Đánh giá giảm dần", key: "rating", value: "desc" },
     ],
     amenityList: [],
     filterList: [],

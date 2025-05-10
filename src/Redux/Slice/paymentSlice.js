@@ -9,6 +9,7 @@ export const fetchPaymentOrder = createAsyncThunk(
       const accessToken = state.auth.accessToken;
       const bookingPayload = state.hotel.bookingPayload;
 
+      // console.log("40>>>", bookingPayload);
       if (!accessToken) {
         return rejectWithValue("Không có token để gọi API");
       }
@@ -16,8 +17,13 @@ export const fetchPaymentOrder = createAsyncThunk(
         return rejectWithValue("Dữ liệu đặt phòng không được cung cấp");
       }
 
+      const removeCouponCode = ({ couponCode, ...rest }) => {
+        return rest;
+      };
+      const bookingPayload_ = removeCouponCode(bookingPayload);
       console.log("fetchPaymentOrder bookingPayload:", bookingPayload);
       console.log("fetchPaymentOrder accessToken:", accessToken);
+      console.log("fetchPaymentOrder bookingPayload_:", bookingPayload_);
       const response = await fetch(`${API_BASE_URL}/api/payment/checkout`, {
         method: "POST",
         headers: {
@@ -25,7 +31,7 @@ export const fetchPaymentOrder = createAsyncThunk(
           Accept: "application/json",
           Authorization: `Bearer ${accessToken}`,
         },
-        body: JSON.stringify(bookingPayload),
+        body: JSON.stringify(bookingPayload_),
       });
 
       const data = await response.json();

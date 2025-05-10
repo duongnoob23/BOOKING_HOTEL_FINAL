@@ -44,8 +44,9 @@ const ListHotelByLocation = ({ navigation }) => {
 
   console.log("18 amenityList", amenityList);
 
-  console.log("16>>>", tempFilter.amenityIds, inforFilter.serviceIds);
-  console.log("17>>>", inforFilter.amenityIds, inforFilter.serviceIds);
+  // console.log("16>>>", tempFilter.amenityIds, inforFilter.serviceIds);
+  // console.log("17>>>", inforFilter.amenityIds, inforFilter.serviceIds);
+  console.log("19>>>", inforFilter);
   // giá trị ban đầu kiểm soát bật tắt các modal
   const modalDefault = {
     Amenity: false,
