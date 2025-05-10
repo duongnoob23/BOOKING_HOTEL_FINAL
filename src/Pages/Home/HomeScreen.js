@@ -141,6 +141,24 @@ const HomeScreen = ({ navigation }) => {
 
   const handleToHotelDetails = (item) => {
     if (item && item !== "") {
+      const currentDay = new Date();
+      const nextDay = new Date();
+      nextDay.setDate(currentDay.getDate() + 1);
+      console.log("15", currentDay, nextDay);
+
+      if (
+        inforFilter.checkInDate === "" &&
+        inforFilter.checkInDate?.length === 0
+      ) {
+        dispatch(changeCheckInDate(currentDay.toISOString()));
+      }
+      if (
+        inforFilter.checkOutDate === "" &&
+        inforFilter.checkOutDate?.length === 0
+      ) {
+        dispatch(changeCheckOutDate(nextDay.toISOString()));
+      }
+
       navigation.navigate("HotelDetails", { item });
       console.log("1");
     } else {
@@ -308,12 +326,23 @@ const HomeScreen = ({ navigation }) => {
     }
 
     // lỗi
-    // const currentDay = new Date();
-    // const nextDay = new Date();
-    // nextDay.setDate(currentDay.getDate() + 1);
-    // console.log("15", currentDay, nextDay);
-    // dispatch(changeCheckInDate(currentDay.toISOString()));
-    // dispatch(changeCheckOutDate(nextDay.toISOString()));
+    const currentDay = new Date();
+    const nextDay = new Date();
+    nextDay.setDate(currentDay.getDate() + 1);
+    console.log("15", currentDay, nextDay);
+
+    if (
+      inforFilter.checkInDate === "" &&
+      inforFilter.checkInDate?.length === 0
+    ) {
+      dispatch(changeCheckInDate(currentDay.toISOString()));
+    }
+    if (
+      inforFilter.checkOutDate === "" &&
+      inforFilter.checkOutDate?.length === 0
+    ) {
+      dispatch(changeCheckOutDate(nextDay.toISOString()));
+    }
     dispatch(skeletonLoading());
     navigation.navigate("ListHotelLocation");
   }; // hàm gọi ListHotelByLocation search từ nút tìm kiếm
