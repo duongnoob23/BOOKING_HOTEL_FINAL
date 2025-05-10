@@ -13,6 +13,7 @@ import {
   saveVoucher,
   clearVoucherStatus,
 } from "../../Redux/Slice/voucherSlice"; // Thay bằng đường dẫn thực tế
+import { showToast } from "../../Utils/toast";
 
 const Promotion = ({ navigation }) => {
   const dispatch = useDispatch();
@@ -31,11 +32,27 @@ const Promotion = ({ navigation }) => {
   // Xử lý thông báo khi lưu voucher
   useEffect(() => {
     if (successSave) {
-      alert(successSave); // Có thể thay bằng ToastAndroid hoặc thư viện khác
+      console.log("thông báo PromotionScreen", successSave);
+      // alert(successSave); // Có thể thay bằng ToastAndroid hoặc thư viện khác
+      showToast({
+        type: "success",
+        text1: "Thành công!",
+        text2: "Lưu voucher Thành công 🥰",
+        position: "top",
+        duration: 3000,
+      });
       dispatch(clearVoucherStatus());
     }
     if (error) {
-      alert(error);
+      // alert(error);
+      console.log("lỗi ở thông báo PromotionScreen", error);
+      showToast({
+        type: "warning",
+        text1: "Thất bại!",
+        text2: "Không lưu được voucher 😡",
+        position: "top",
+        duration: 3000,
+      });
       dispatch(clearVoucherStatus());
     }
   }, [successSave, error, dispatch]);
@@ -63,7 +80,7 @@ const Promotion = ({ navigation }) => {
     return (
       <TouchableOpacity
         style={styles.voucherItem}
-        onPress={() => handleToVoucherDetail(item)}
+        // onPress={() => handleToVoucherDetail(item)}
       >
         <View style={styles.iconContainer}>
           <View
@@ -118,9 +135,9 @@ const Promotion = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
+      {/* <View style={styles.header}>
         <Text style={styles.headerTitle}>Khuyến mãi sự kiện</Text>
-      </View>
+      </View> */}
       <FlatList
         data={eventVouchers}
         renderItem={renderVoucher}

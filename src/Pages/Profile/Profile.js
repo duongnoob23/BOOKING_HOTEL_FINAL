@@ -8,7 +8,7 @@ import { fetchUserInfo, logout, setPrePage } from "../../Redux/Slice/authSlice";
 const Profile = ({ navigation }) => {
   const dispatch = useAppDispatch();
   const { isLoggedIn, infoUser } = useAppSelector((state) => state.auth);
-  console.log(infoUser);
+  console.log("infoUser", infoUser);
   const anonymousData = {
     name: "Ẩn danh",
     email: "email@anonym.com",
@@ -30,7 +30,7 @@ const Profile = ({ navigation }) => {
         lastName: infoUser?.lastName || "",
         email: infoUser?.email || "No email",
         phone: infoUser?.phone || "No phone",
-        image: infoUser?.image || defaultAvatar,
+        image: infoUser?.avatar || defaultAvatar,
       }
     : anonymousData;
 

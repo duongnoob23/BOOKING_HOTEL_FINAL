@@ -42,11 +42,26 @@ const RewardMember = ({ navigation }) => {
   // Xử lý thông báo khi lưu voucher
   useEffect(() => {
     if (successSave) {
-      alert(successSave); // Có thể thay bằng ToastAndroid hoặc thư viện khác
+      console.log("thông báo PromotionScreen", successSave);
+      // alert(successSave); // Có thể thay bằng ToastAndroid hoặc thư viện khác
+      showToast({
+        type: "success",
+        text1: "Thành công!",
+        text2: "Lưu voucher Thành công 🥰",
+        position: "top",
+        duration: 3000,
+      });
       dispatch(clearVoucherStatus());
     }
     if (error) {
-      alert(error);
+      console.log("lỗi ở thông báo PromotionScreen", error);
+      showToast({
+        type: "warning",
+        text1: "Thất bại!",
+        text2: "Không lưu được voucher 😡",
+        position: "top",
+        duration: 3000,
+      });
       dispatch(clearVoucherStatus());
     }
   }, [successSave, error, dispatch]);

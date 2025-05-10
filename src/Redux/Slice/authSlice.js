@@ -107,6 +107,10 @@ export const updateUserInfo = createAsyncThunk(
         throw new Error("Không có token để gọi API");
       }
 
+      if (!userInfo) {
+        return rejectWithValue("Thông tin người dùng không được cung cấp");
+      }
+
       const formData = new FormData();
       formData.append("firstName", userInfo.firstName);
       formData.append("lastName", userInfo.lastName);
@@ -114,20 +118,28 @@ export const updateUserInfo = createAsyncThunk(
       formData.append("phone", userInfo.phone);
 
       // Nếu bạn muốn upload hình ảnh từ bộ nhớ (image là URI hoặc file object)
-      if (userInfo.image) {
+      if (
+        userInfo.image &&
+        userInfo.image.uri &&
+        typeof userInfo.image.uri === "string"
+      ) {
+        const fileType =
+          userInfo.image.type === "image"
+            ? "image/jpeg"
+            : userInfo.image.type || "image/jpeg";
         formData.append("image", {
-          uri: userInfo.image.uri, // ví dụ: "file:///data/user/0/..."
+          uri: userInfo.image.uri,
           name: userInfo.image.name || "avatar.jpg",
-          type: userInfo.image.type || "image/jpeg",
+          type: fileType,
         });
       }
+
+      console.log("HHHHHHHHHHHHHHHHHHH", formData);
 
       const response = await fetch(`${API_BASE_URL}/api/user/update`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${accessToken}`,
-          // Không cần "Content-Type": multipart/form-data
-          // Fetch sẽ tự thêm boundary khi dùng FormData
         },
         body: formData,
       });
