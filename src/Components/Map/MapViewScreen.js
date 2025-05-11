@@ -186,12 +186,7 @@ const MapDirectionScreen = ({ navigation }) => {
             <View style={styles.customMarker}>
               {/* <View style={styles.markerDot} />
                */}
-              <Ionicons
-                name="location-sharp"
-                size={30}
-                color="#007AFF"
-                style={styles.icon}
-              />
+
               <View
                 style={{
                   backgroundColor: "white",
@@ -199,7 +194,15 @@ const MapDirectionScreen = ({ navigation }) => {
                   marginTop: 4,
                   paddingBottom: 2,
                 }}
-              ></View>
+              >
+                <Text style={styles.promotionPrice}>{loc?.promotionPrice}</Text>
+              </View>
+              <Ionicons
+                name="location-sharp"
+                size={8}
+                color="red"
+                style={styles.icon}
+              />
             </View>
           </Marker>
         ))}
@@ -476,5 +479,8 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontWeight: "500",
     textAlign: "center",
+  },
+  promotionPrice: {
+    fontSize: 8,
   },
 });

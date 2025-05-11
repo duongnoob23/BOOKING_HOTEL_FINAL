@@ -13,15 +13,15 @@ import { mapOpenClose } from "../../Redux/Slice/hotelSlice";
 const MapPriceScreen = ({ route, data }) => {
   // const data = route?.params;
   console.log("data mappppp", data);
+  const latitude = parseFloat(data?.lat || 0);
+  // const latitude = parseFloat(0);
+  const longtitude = parseFloat(data?.lng || 0);
+  // const longtitude = parseFloat(0);
+
   const { map } = useAppSelector((state) => state.hotel);
   const dispatch = useAppDispatch();
-  const [latitude, longitude] = (data && data.split(",")) || [
-    21.0312, 105.8341,
-  ];
 
-  const lat = parseFloat(latitude);
-  const lon = parseFloat(longitude);
-  console.log(latitude, longitude);
+  console.log(latitude, longtitude);
   const handleOpenMap = () => {
     if (map === true) {
       openMapLocation();
@@ -33,8 +33,8 @@ const MapPriceScreen = ({ route, data }) => {
     handleOpenMap();
   }, [map]);
   const startCoordinate = {
-    latitude: lat, // Lăng Chủ tịch Hồ Chí Minh
-    longitude: lon,
+    latitude: latitude, // Lăng Chủ tịch Hồ Chí Minh
+    longitude: longtitude,
   };
 
   //   const [showButtons, setShowButtons] = useState(false); // State để hiển thị nút
@@ -60,8 +60,8 @@ const MapPriceScreen = ({ route, data }) => {
           <MapView
             style={styles.map}
             initialRegion={{
-              latitude: startCoordinate.latitude,
-              longitude: startCoordinate.longitude,
+              latitude: latitude,
+              longitude: longtitude,
               latitudeDelta: 0.01,
               longitudeDelta: 0.01,
             }}

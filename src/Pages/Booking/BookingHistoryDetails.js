@@ -110,6 +110,10 @@ const BookingHistoryDetails = ({ navigation, route }) => {
   };
   console.log("BBBBBBBBBBBBBBBBBBBBBBB", bookingDetailData);
 
+  const handleToPolicy = (item) => {
+    navigation.navigate("AllPolicy", { data: bookingDetailData?.policyList });
+  };
+
   const renderListRoom = (item) => (
     <View style={styles.roomWrapper}>
       <View style={styles.roomInfo}>
@@ -145,6 +149,7 @@ const BookingHistoryDetails = ({ navigation, route }) => {
       <View style={styles.roomInfo}>
         <Text style={styles.roomLabel}>Điều kiện</Text>
         <TouchableOpacity
+          onPress={() => handleToPolicy(item)}
           style={[styles.roomValue, { fontWeight: "bold", color: "#007AFF" }]}
         >
           <View>
@@ -218,7 +223,7 @@ const BookingHistoryDetails = ({ navigation, route }) => {
           </View>
         </View>
       </ScrollView>
-      <View style={styles.headerSection}>
+      {/* <View style={styles.headerSection}>
         <View style={styles.infoSection}>
           <View style={styles.infoItem}>
             <Text style={styles.infoLabel}>Mã giảm giá</Text>
@@ -231,7 +236,7 @@ const BookingHistoryDetails = ({ navigation, route }) => {
             </TouchableOpacity>
           </View>
         </View>
-      </View>
+      </View> */}
 
       <View style={styles.headerSection2}>
         <Text style={[styles.title, styles.titleCenter]}>Hóa đơn</Text>

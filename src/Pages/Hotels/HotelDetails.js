@@ -107,6 +107,7 @@ const HotelDetails = ({ navigation, route }) => {
     navigation.navigate("GoongMapComponent", {
       lat: hotelDetail?.review?.lat,
       lng: hotelDetail?.review?.lng,
+      hotelName: item?.hotelName,
     });
   };
 

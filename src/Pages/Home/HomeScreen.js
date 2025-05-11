@@ -405,7 +405,7 @@ const HomeScreen = ({ navigation }) => {
           <View style={styles.dealFooter}>
             <Text style={styles.dealSale}>Giảm 25%</Text>
             <Text style={styles.dealPrice}> {item.price}</Text>
-            <TouchableOpacity>
+            <TouchableOpacity onPress={() => handleToHotelDetails(item)}>
               <Text style={styles.dealBooking}>Đặt ngay </Text>
             </TouchableOpacity>
           </View>

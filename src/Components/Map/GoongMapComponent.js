@@ -7,7 +7,7 @@ import Toast from "react-native-toast-message"; // Sử dụng Toast để hiể
 const GoongMapComponent = ({ navigation, route }) => {
   const lat = parseFloat(route?.params?.lat);
   const lng = parseFloat(route?.params?.lng);
-  console.log("Điểm đích:", lat, lng);
+  const hotelName = route?.params?.hotelName;
 
   const [routeCoordinates, setRouteCoordinates] = useState([]);
   const [currentLocation, setCurrentLocation] = useState(null); // Bắt đầu với null
@@ -170,7 +170,7 @@ const GoongMapComponent = ({ navigation, route }) => {
         />
         <Marker
           coordinate={{ latitude: lat, longitude: lng }}
-          title="Đích đến"
+          title={hotelName}
         />
       </MapView>
     </View>

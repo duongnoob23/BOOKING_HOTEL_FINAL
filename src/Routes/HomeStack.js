@@ -255,9 +255,9 @@ const HomeStackNavigator = () => {
         name="GoongMapComponent"
         component={GoongMapComponent}
         options={{
-          headerShown: false,
+          headerShown: true,
           tabBarVisible: false, // Ẩn thanh tab dưới cùng
-          title: "",
+          title: "Bản đồ",
         }}
       />
     </Stack.Navigator>
