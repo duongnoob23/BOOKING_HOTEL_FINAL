@@ -42,7 +42,7 @@ const ListHotelByLocation = ({ navigation }) => {
     errorAL,
   } = useAppSelector((state) => state.hotel);
 
-  console.log("18 amenityList", amenityList);
+  // console.log("18 amenityList", hotelByLocation);
 
   // console.log("16>>>", tempFilter.amenityIds, inforFilter.serviceIds);
   // console.log("17>>>", inforFilter.amenityIds, inforFilter.serviceIds);
@@ -319,6 +319,10 @@ const ListHotelByLocation = ({ navigation }) => {
     }
   };
 
+  const handleToMapViewScreen = () => {
+    navigation.navigate("MapViewScreen");
+    // navigation.navigate("GoongMapComponent");
+  };
   // hàm hiển thị từng item trong danh sách khách sạnsạn
   const HotelItem = ({ item }) => {
     return (
@@ -356,7 +360,7 @@ const ListHotelByLocation = ({ navigation }) => {
 
             {/* Mô tả */}
             <Text style={styles.description}>
-              Nằm trong khu vực khách quan...
+              Địa chỉ: {item?.hotelLocation}
             </Text>
 
             {/* Đánh giá và số nhận xét */}
@@ -515,6 +519,7 @@ const ListHotelByLocation = ({ navigation }) => {
             //     SortBy: !modalVisible.SortBy,
             //   })
             // }
+            onPress={() => handleToMapViewScreen()}
           >
             <Text style={styles.filterButtonText}>Bản đồ</Text>
             <Icon name="angle-down" size={20} color="#000000" />
@@ -709,7 +714,7 @@ const styles = StyleSheet.create({
     shadowRadius: 5,
     borderWidth: 1,
     borderColor: "#E0E0E0",
-    height: 280,
+    height: 320,
     padding: 5,
   },
   hotelContainer: {

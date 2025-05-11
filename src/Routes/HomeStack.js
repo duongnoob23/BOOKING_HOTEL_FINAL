@@ -26,6 +26,8 @@ import AllComments from "../Pages/Hotels/AllComment";
 import PhoneLogin from "../Pages/Auth/PhoneLogin";
 import AllPolicy from "../Pages/Hotels/AllPolicy";
 import Profile from "../Pages/Profile/Profile";
+import MapViewScreen from "../Components/Map/MapViewScreen";
+import GoongMapComponent from "../Components/Map/GoongMapComponent";
 const Stack = createNativeStackNavigator();
 
 const HomeStackNavigator = () => {
@@ -238,6 +240,24 @@ const HomeStackNavigator = () => {
           headerShown: false,
           tabBarVisible: false, // Ẩn thanh tab dưới cùng
           title: "Các chính sách",
+        }}
+      />
+      <Stack.Screen
+        name="MapViewScreen"
+        component={MapViewScreen}
+        options={{
+          headerShown: true,
+          tabBarVisible: false, // Ẩn thanh tab dưới cùng
+          title: "Các khách sạn gần đây",
+        }}
+      />
+      <Stack.Screen
+        name="GoongMapComponent"
+        component={GoongMapComponent}
+        options={{
+          headerShown: false,
+          tabBarVisible: false, // Ẩn thanh tab dưới cùng
+          title: "",
         }}
       />
     </Stack.Navigator>
