@@ -20,7 +20,7 @@ const ModalBookingCancelled = ({
   visible,
   onClose,
   onConfirm,
-  bookingId,
+  bookingData,
   navigation,
   handleToBookingScreen,
   policyRoomList, // Nhận mảng từ props
@@ -30,8 +30,9 @@ const ModalBookingCancelled = ({
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const bookingId = bookingData?.bookingId;
   const dispatch = useAppDispatch();
-
+  console.log("32>>>", bookingData);
   const fetchConfirmBooking = async (retryCount = 1, delay = 1000) => {
     for (let attempt = 1; attempt <= retryCount; attempt++) {
       try {
@@ -140,21 +141,23 @@ const ModalBookingCancelled = ({
   const renderPolicyItem = (policy, index) => {
     if (!policy?.name || !policy?.description) return null;
     return (
-      <View key={policy?.id || `policy-${index}`} style={styles.policyItem}>
-        <Ionicons
-          name="newspaper-outline"
-          size={20}
-          color="#191D39"
-          style={styles.iconPolicy}
-        />
-        <View style={styles.policyContent}>
-          <Text style={styles.policyName}>{policy.name}</Text>
-          <Text style={styles.policyDescription}>{policy.description}</Text>
-          {policy?.condition && policy?.value && (
-            <Text style={styles.policyDetails}>
-              Điều kiện: {policy.condition} giờ, Hoàn tiền: {policy.value}
-            </Text>
-          )}
+      <View key={policy?.id || `policy-${index}`}>
+        <View style={styles.policyItem}>
+          <Ionicons
+            name="newspaper-outline"
+            size={20}
+            color="#191D39"
+            style={styles.iconPolicy}
+          />
+          <View style={styles.policyContent}>
+            <Text style={styles.policyName}>{policy.name}</Text>
+            <Text style={styles.policyDescription}>{policy.description}</Text>
+            {policy?.condition && policy?.value && (
+              <Text style={styles.policyDetails}>
+                Điều kiện: {policy.condition} giờ, Hoàn tiền: {policy.value}
+              </Text>
+            )}
+          </View>
         </View>
       </View>
     );
@@ -183,10 +186,26 @@ const ModalBookingCancelled = ({
                   {policyRoomList.map((policy, index) =>
                     renderPolicyItem(policy, index)
                   )}
+
+                  <View style={styles.policyItem}>
+                    <Ionicons
+                      name="cash-outline"
+                      size={20}
+                      color="#191D39"
+                      style={styles.iconPolicy}
+                    />
+                    <View style={styles.policyContent}>
+                      <Text style={styles.policyName}>Hoàn tiền:</Text>
+                      <Text style={styles.policyDescription}>
+                        Số tiền sẽ được hoàn lại: {bookingData?.priceIfRefund}đ
+                      </Text>
+                    </View>
+                  </View>
                 </>
               ) : (
                 <Text style={styles.emptyText}>Không có chính sách nào.</Text>
               )}
+
               <View style={styles.reasonContainer}>
                 <Text style={styles.reasonLabel}>Lý do hủy phòng</Text>
                 <TextInput

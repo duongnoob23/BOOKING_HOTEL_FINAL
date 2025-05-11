@@ -68,7 +68,7 @@ const RoomCancelled = ({ navigation }) => {
           </Text>
         </View>
         <Text style={styles.bookingHistoryScreen__date}>
-          Đã đặt: {item?.bookingDate}
+          Đã hủy: {item?.bookingDate}
         </Text>
         <View style={styles.bookingHistoryScreen__priceRow}>
           <Text style={styles.bookingHistoryScreen__price}>

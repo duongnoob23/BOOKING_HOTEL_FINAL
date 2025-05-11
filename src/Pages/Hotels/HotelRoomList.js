@@ -294,9 +294,7 @@ const HotelRoomList = ({ navigation, route }) => {
               color="#191D39"
               style={styles.iconItem}
             />
-            <Text style={styles.infoText}>
-              Số ngày chọn: {room?.roomQuantity} // đoạn này có vẻ sai
-            </Text>
+            <Text style={styles.infoText}>Số ngày chọn: {room?.selectDay}</Text>
           </View>
         </View>
         {/* Dịch vụ */}
@@ -442,9 +440,9 @@ const HotelRoomList = ({ navigation, route }) => {
               <Text style={styles.header__title}>{item?.hotelName}</Text>
             </View>
             <View style={styles.header__label}>
-              <Text style={styles.header__desc}>
+              {/* <Text style={styles.header__desc}>
                 {hotelDetail && hotelDetail?.review?.rating}
-              </Text>
+              </Text> */}
               <Text style={styles.header__desc}>
                 {hotelDetail && hotelDetail?.review?.location}
               </Text>
@@ -707,7 +705,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
   },
   header__title: {
-    textAlign: "center",
+    textAlign: "flex-star",
     fontSize: 24,
     fontWeight: "bold",
     color: "black",
@@ -717,11 +715,13 @@ const styles = StyleSheet.create({
     // textShadowRadius: 5,
   },
   header__desc: {
-    textAlign: "center",
+    textAlign: "flex-star",
     fontSize: 16,
     fontWeight: "400",
     color: "black",
     marginLeft: 5,
+    flexWrap: "wrap",
+    width: "80%",
   },
   header__info: {
     flexDirection: "row",

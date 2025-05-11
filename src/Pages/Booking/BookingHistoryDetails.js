@@ -35,7 +35,17 @@ const BookingHistoryDetails = ({ navigation, route }) => {
   const { bookingDetailData, loadingBD, errorBD } = useAppSelector(
     (state) => state.booking
   );
-
+  console.log("TTTTTTTTTTT", type);
+  let statusRoom = "";
+  if (type === "Booked") {
+    statusRoom = "Đã đặt";
+  } else if (type === "CheckedOut") {
+    statusRoom = "CheckOut";
+  } else if (type === "Cancelled") {
+    statusRoom = "Đã Hủy";
+  } else {
+    statusRoom = "CheckIn";
+  }
   console.log("31>>>", bookingDetailData);
   const [openModal, setOpenModal] = useState(false);
 
@@ -208,6 +218,18 @@ const BookingHistoryDetails = ({ navigation, route }) => {
                   {bookingDetailData && bookingDetailData?.checkOut}
                 </Text>
               </View>
+              <View style={styles.infoItem}>
+                <Text style={styles.infoLabel}>Trạng thái phòng</Text>
+                <Text style={styles.infoValue}>{statusRoom}</Text>
+              </View>
+              {type === "Cancelled" && (
+                <View style={styles.infoItemCancelled}>
+                  <Text style={styles.infoLabelCancelled}>Lý do hủy </Text>
+                  <Text style={styles.infoValueCancelled}>
+                    {bookingDetailData && bookingDetailData?.reason}
+                  </Text>
+                </View>
+              )}
             </View>
             <View style={styles.br} />
           </View>
@@ -277,13 +299,23 @@ const BookingHistoryDetails = ({ navigation, route }) => {
               {formatPrice(bookingDetailData && bookingDetailData?.finalPrice)}
             </Text>
           </View>
+          {type === "Cancelled" && (
+            <View style={styles.infoItem}>
+              <Text style={styles.infoLabel}>Tiền được hoàn lại</Text>
+              <Text style={styles.infoValue}>
+                {formatPrice(
+                  bookingDetailData && bookingDetailData?.priceIfRefund
+                )}
+              </Text>
+            </View>
+          )}
         </View>
         <View style={styles.br} />
       </View>
       {type === "Booked" && (
         <View style={styles.footerSection}>
           <View style={styles.br} />
-          <Text style={styles.subTitle}>Phương thức hủy phòng</Text>
+          {/* <Text style={styles.subTitle}>Phương thức hủy phòng</Text> */}
           <TouchableOpacity
             style={styles.button}
             onPress={() => setOpenModal(true)}
@@ -297,7 +329,7 @@ const BookingHistoryDetails = ({ navigation, route }) => {
         visible={openModal}
         onClose={() => setOpenModal(false)}
         onConfirm={handleConfirmCancelled}
-        bookingId={bookingDetailData?.bookingId}
+        bookingData={bookingDetailData}
         handleToBookingScreen={handleToBookingScreen}
         policyRoomList={bookingDetailData?.policyList}
         // policyRoomList={test.policyList}
@@ -371,15 +403,32 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
   },
+  infoItemCancelled: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
   infoLabel: {
     fontSize: 14,
     color: "#666",
     marginBottom: 2,
   },
+  infoLabelCancelled: {
+    fontSize: 14,
+    color: "#666",
+    marginBottom: 2,
+    width: "55%",
+  },
   infoValue: {
     fontSize: 16,
     color: "#000",
     marginBottom: 2,
+  },
+  infoValueCancelled: {
+    width: "45%",
+    fontSize: 16,
+    color: "#000",
+    marginBottom: 2,
+    flexWrap: "wrap",
   },
   roomInfo: {
     flexDirection: "row",

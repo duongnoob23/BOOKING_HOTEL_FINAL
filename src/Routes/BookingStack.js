@@ -3,6 +3,7 @@ import BookingScreen from "../Pages/Booking/BookingScreen";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import RateApp from "../Pages/Reviews/RateApp";
 import TermScreen from "../Pages/Auth/TermScreen";
+import AllPolicy from "../Pages/Hotels/AllPolicy";
 const Stack = createNativeStackNavigator();
 
 const BookingStackNavigator = () => {
@@ -44,6 +45,15 @@ const BookingStackNavigator = () => {
         component={RateApp}
         options={{
           headerShown: false,
+          tabBarVisible: false, // Ẩn thanh tab dưới cùng
+        }}
+      />
+      <Stack.Screen
+        name="AllPolicy"
+        component={AllPolicy}
+        options={{
+          headerShown: true,
+          title: "Các chính sách",
           tabBarVisible: false, // Ẩn thanh tab dưới cùng
         }}
       />
