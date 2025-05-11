@@ -103,7 +103,11 @@ const HotelDetails = ({ navigation, route }) => {
   // Hàm xử lý khi nhấn nút "Vị trí" (mở Google Maps)
   const handleMapLocation = () => {
     // Dispatch action để mở Google Maps với vị trí khách sạn
-    dispatch(mapOpenClose(true));
+    // dispatch(mapOpenClose(true));
+    navigation.navigate("GoongMapComponent", {
+      lat: hotelDetail?.review?.lat,
+      lng: hotelDetail?.review?.lng,
+    });
   };
 
   // Component tùy chỉnh cho thanh tab (Price/Photo/Check)
@@ -219,7 +223,7 @@ const HotelDetails = ({ navigation, route }) => {
             </View>
             <TouchableOpacity
               style={styles.header__location}
-              onPress={handleMapLocation}
+              onPress={() => handleMapLocation()}
             >
               <Icon name="map-marker" size={16} color="white" />
               <View style={styles.header__location__text}>
@@ -259,10 +263,10 @@ const HotelDetails = ({ navigation, route }) => {
         <View style={styles.footer__price}>
           <View style={styles.footer__price1}>
             <Text style={styles.priceNoPromotion}>
-              {hotelDetail?.priceNoPromotion || "N/A"}đ
+              {hotelDetail?.priceNoPromotion || "N/A"}
             </Text>
             <Text style={styles.priceMin}>
-              {hotelDetail?.priceMin || "N/A"} đ
+              {hotelDetail?.priceMin || "N/A"}
             </Text>
           </View>
           <View style={styles.footer__price2}>

@@ -148,7 +148,7 @@ const MapDirectionScreen = ({ navigation }) => {
                 style={styles.bookButton}
                 onPress={() => handleToHotelDetails(selectedLocation)}
               >
-                <Text style={styles.bookButtonText}>Đặt ngay</Text>
+                <Text style={styles.bookButtonText}>Xem chi tiết</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -176,7 +176,7 @@ const MapDirectionScreen = ({ navigation }) => {
 
         {locations.map((loc) => (
           <Marker
-            key={loc.id}
+            key={loc.hotelId}
             coordinate={{
               latitude: parseFloat(loc.lat),
               longitude: parseFloat(loc.lng),
