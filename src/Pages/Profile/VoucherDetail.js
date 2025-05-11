@@ -52,7 +52,9 @@ const FAKE_VOUCHERS = [
   },
 ];
 
-const VoucherDetail = ({ navigation }) => {
+const VoucherDetail = ({ navigation, route }) => {
+  const voucherInfo = route?.params?.voucher;
+  console.log("52>>>", voucherInfo);
   const voucher = FAKE_VOUCHERS[0]; // Sử dụng voucher đầu tiên trong danh sách giả
 
   const applicableProducts =
@@ -74,7 +76,7 @@ const VoucherDetail = ({ navigation }) => {
             </View>
           </View>
           <Text style={styles.title}>
-            {voucher.type === "PERCENTAGE"
+            {/* {voucher.type === "PERCENTAGE"
               ? `Giảm ${voucher.discountValue}% ${
                   voucher.maxDiscount > 0
                     ? `Tối đa ${voucher.maxDiscount.toLocaleString()} VNĐ`
@@ -83,17 +85,19 @@ const VoucherDetail = ({ navigation }) => {
               : `Giảm ${voucher.discountValue.toLocaleString()} VNĐ`}{" "}
             {voucher.minOrderValue > 0
               ? `Đơn tối thiểu ${voucher.minOrderValue.toLocaleString()} VNĐ`
-              : ""}
+              : ""} */}
+            {voucherInfo?.condition}
           </Text>
           <Text style={styles.expiry}>
             Có Hiệu Lực Từ:{" "}
-            {new Date(voucher.createdAt).toLocaleString("vi-VN", {
+            {/* {new Date(voucher.createdAt).toLocaleString("vi-VN", {
               day: "2-digit",
               month: "2-digit",
               year: "numeric",
               hour: "2-digit",
               minute: "2-digit",
-            })}
+            })} */}
+            {voucherInfo?.expiry}
           </Text>
         </View>
 
@@ -112,7 +116,7 @@ const VoucherDetail = ({ navigation }) => {
           <Text style={styles.sectionContent}>{shippingUnits}</Text>
         </View>
 
-        <View style={styles.section}>
+        {/* <View style={styles.section}>
           <Text style={styles.sectionTitle}>Xem chi tiết</Text>
           <Text style={styles.sectionContent}>
             Nhập mã {voucher.code} để được{" "}
@@ -136,7 +140,7 @@ const VoucherDetail = ({ navigation }) => {
             })}
             . SỐ LƯỢNG CÓ HẠN.
           </Text>
-        </View>
+        </View> */}
       </ScrollView>
 
       <TouchableOpacity

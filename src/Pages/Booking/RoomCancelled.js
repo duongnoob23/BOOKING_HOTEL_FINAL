@@ -82,12 +82,8 @@ const RoomCancelled = ({ navigation }) => {
             Thông tin
           </Text>
         </TouchableOpacity> */}
-        <TouchableOpacity
-          style={styles.bookingHistoryScreen__rebookButton}
-          // onPress={() => handleReviewHotel(item)}
-        >
+        <TouchableOpacity style={styles.bookingHistoryScreen__rebookButton}>
           <Text style={styles.bookingHistoryScreen__rebookButtonText}>
-            {/* Đã hoàn tiền/ Đánh giá */}
             Đã hoàn tiền
           </Text>
         </TouchableOpacity>

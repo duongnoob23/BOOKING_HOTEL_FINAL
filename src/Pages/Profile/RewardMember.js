@@ -100,6 +100,9 @@ const RewardMember = ({ navigation }) => {
   }
 
   // Tạo danh sách ID của myVouchers để kiểm tra
+
+  console.log("VVVVVVVVVV", myVouchers);
+
   const myVouchersIds = useMemo(() => {
     return [
       ...myVouchers?.unused,
