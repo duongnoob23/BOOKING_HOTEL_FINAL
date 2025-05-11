@@ -25,6 +25,7 @@ import {
 } from "../../Redux/Slice/hotelSlice";
 import ModalFilter from "../../Components/Modal/Home/ModalFilter";
 import { showToast } from "../../Utils/toast";
+import { formatPrice } from "../../Utils/formarPrice";
 const ListHotelByLocation = ({ navigation }) => {
   const [searchText, setSearchText] = useState("");
   const {
@@ -323,6 +324,21 @@ const ListHotelByLocation = ({ navigation }) => {
     navigation.navigate("MapViewScreen");
     // navigation.navigate("GoongMapComponent");
   };
+
+  const HotelCompareItem = ({ item }) => {
+    return (
+      <View style={styles.compareGroup}>
+        <View style={styles.comparePrice}>
+          <Text style={styles.comparePriceText}>
+            {formatPrice(item?.minPrice)}
+          </Text>
+        </View>
+        <View style={styles.compareHotelName}>
+          <Text style={styles.compareHotelNameText}>{item?.otaName}</Text>
+        </View>
+      </View>
+    );
+  };
   // hàm hiển thị từng item trong danh sách khách sạnsạn
   const HotelItem = ({ item }) => {
     return (
@@ -394,7 +410,7 @@ const ListHotelByLocation = ({ navigation }) => {
                   <View>
                     <Text style={styles.oldPrice}>
                       {/* {Math.round(item.price * 2).toLocaleString()} đ */}
-                      {item?.price?.toLocaleString()} đ
+                      {formatPrice(item?.price)}
                     </Text>
                   </View>
                 )}
@@ -406,7 +422,7 @@ const ListHotelByLocation = ({ navigation }) => {
                   }
                 >
                   <Text style={styles.price}>
-                    {item?.promotionPrice?.toLocaleString()} đ
+                    {formatPrice(item?.promotionPrice)}
                   </Text>
                 </View>
               </View>
@@ -419,6 +435,20 @@ const ListHotelByLocation = ({ navigation }) => {
                 <Text style={styles.bookButtonText}>Đặt ngay</Text>
               </TouchableOpacity>
             </View>
+          </View>
+        </View>
+        <View style={styles.hotelContainerSecond}>
+          <View style={styles.newPrice}>
+            {/* <ScrollView style={styles.scrollView}> */}
+            <ScrollView>
+              {item?.otaPriceMinList &&
+                item?.otaPriceMinList?.map((item, index) => (
+                  <HotelCompareItem key={index} item={item} />
+                ))}
+            </ScrollView>
+          </View>
+          <View style={styles.otherPrice}>
+            <Text style={styles.otherPriceText}>Giá khác</Text>
           </View>
         </View>
       </TouchableOpacity>
@@ -714,12 +744,16 @@ const styles = StyleSheet.create({
     shadowRadius: 5,
     borderWidth: 1,
     borderColor: "#E0E0E0",
-    height: 320,
+    height: 400,
     padding: 5,
   },
   hotelContainer: {
     flexDirection: "row", // Ảnh bên trái, thông tin bên phải
     // padding: 10,
+    height: "80%",
+  },
+  hotelContainerSecond: {
+    height: "20%",
   },
   imageContainer: {
     width: "35%", // Ảnh chiếm 40% chiều rộng
@@ -990,6 +1024,45 @@ const styles = StyleSheet.create({
   selectedFilterText: {
     color: "#007AFF",
     fontSize: 12,
+  },
+  hotelContainerSecond: {
+    marginTop: 5,
+    backgroundColor: "white",
+    borderRadius: 10,
+    padding: 5,
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#E5E5E5",
+  },
+  newPrice: {
+    width: "80%",
+  },
+  otherPrice: {
+    width: "20%",
+    alignSelf: "center",
+  },
+  otherPriceText: {
+    fontSize: 15,
+    color: "gray",
+    fontWeight: "400",
+  },
+  compareGroup: {
+    flexDirection: "row",
+  },
+  comparePriceText: {
+    fontSize: 15,
+    fontWeight: "bold",
+    color: "black",
+  },
+  compareHotelNameText: {
+    fontSize: 15,
+    fontWeight: "bold",
+    color: "black",
+  },
+  comparePrice: {
+    marginRight: 10,
   },
 });
 

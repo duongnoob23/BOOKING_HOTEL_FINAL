@@ -304,7 +304,7 @@ const BookingHistoryDetails = ({ navigation, route }) => {
               <Text style={styles.infoLabel}>Tiền được hoàn lại</Text>
               <Text style={styles.infoValue}>
                 {formatPrice(
-                  bookingDetailData && bookingDetailData?.priceIfRefund
+                  bookingDetailData && bookingDetailData?.paymentRefund
                 )}
               </Text>
             </View>

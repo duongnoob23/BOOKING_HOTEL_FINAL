@@ -27,6 +27,7 @@ import {
   updateHotelDetailId,
 } from "../../Redux/Slice/hotelSlice";
 import { showToast } from "../../Utils/toast";
+import { formatPrice } from "../../Utils/formarPrice";
 
 const HotelDetails = ({ navigation, route }) => {
   // Lấy hotelId và item từ route params (truyền từ trang trước)
@@ -215,7 +216,7 @@ const HotelDetails = ({ navigation, route }) => {
                   color="#EBA731"
                 />
                 <Text style={styles.header__rating__score}>
-                  {hotelDetail?.review?.rating || "N/A"}
+                  {hotelDetail?.review?.rating || 0}
                 </Text>
               </View>
               <Text style={styles.header__rating__text}>
@@ -264,10 +265,10 @@ const HotelDetails = ({ navigation, route }) => {
         <View style={styles.footer__price}>
           <View style={styles.footer__price1}>
             <Text style={styles.priceNoPromotion}>
-              {hotelDetail?.priceNoPromotion || "N/A"}
+              {formatPrice(hotelDetail?.priceNoPromotion) || 0}
             </Text>
             <Text style={styles.priceMin}>
-              {hotelDetail?.priceMin || "N/A"}
+              {formatPrice(hotelDetail?.priceMin) || 0}
             </Text>
           </View>
           <View style={styles.footer__price2}>
@@ -541,7 +542,7 @@ const styles = StyleSheet.create({
   },
   priceMin: {
     color: "black",
-    fontSize: 28,
+    fontSize: 20,
     fontWeight: 800,
   },
 });

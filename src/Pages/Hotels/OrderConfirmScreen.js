@@ -120,6 +120,23 @@ const OrderConfirmScreen = ({ navigation }) => {
     }
   };
 
+  const handlePayment = async () => {
+    setIsLoading(true);
+    try {
+      await Promise.all([fetchPayment()]);
+    } catch (error) {
+      console.log("Failed to fetch data in OrderConfirm :", error);
+      showToast({
+        type: "error",
+        text1: "Lỗi tải dữ liệu",
+        text2: "Không thể tải dữ liệu chi tiết hóa đơn .",
+        position: "top",
+        duration: 3000,
+      });
+      setIsLoading(false);
+    }
+  };
+
   useEffect(() => {
     const bookingPayload_ = {
       ...bookingPayload,
@@ -202,23 +219,6 @@ const OrderConfirmScreen = ({ navigation }) => {
       return;
     }
     // dispatch(fetchListPromotion({ code, totalPrice }));
-  };
-
-  const handlePayment = async () => {
-    setIsLoading(true);
-    try {
-      await Promise.all([fetchPayment()]);
-    } catch (error) {
-      console.log("Failed to fetch data in OrderConfirm :", error);
-      showToast({
-        type: "error",
-        text1: "Lỗi tải dữ liệu",
-        text2: "Không thể tải dữ liệu chi tiết hóa đơn .",
-        position: "top",
-        duration: 3000,
-      });
-      setIsLoading(false);
-    }
   };
 
   // điều hướng tới chính sách
@@ -464,7 +464,15 @@ const OrderConfirmScreen = ({ navigation }) => {
             (isLoading || loadingPayment) && styles.buttonDisabled,
           ]}
           onPress={() =>
-            showModal("confirm", "Xác nhận", ` ${bookingData?.policyPayment} `)
+            showModal(
+              "confirm",
+              "Xác nhận",
+              ` ${
+                bookingData?.policyPayment
+              } \n\nBạn sẽ thanh toán \n tiền cọc: ${formatPrice(
+                bookingData?.priceDeposit
+              )}  `
+            )
           }
           disabled={isLoading || loadingPayment}
         >
