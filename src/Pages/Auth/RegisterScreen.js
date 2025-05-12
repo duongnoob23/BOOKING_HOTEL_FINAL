@@ -10,6 +10,7 @@ import {
 import Ionicons from "react-native-vector-icons/Ionicons";
 import { useAppDispatch, useAppSelector } from "../../Redux/hook";
 import { registerUser, resetRegisterState } from "../../Redux/Slice/authSlice";
+import { showToast } from "../../Utils/toast";
 
 const RegisterScreen = ({ navigation }) => {
   useLayoutEffect(() => {
@@ -42,12 +43,27 @@ const RegisterScreen = ({ navigation }) => {
   // Theo dõi trạng thái đăng ký để hiển thị thông báo và điều hướng
   useEffect(() => {
     if (registerSuccess) {
-      Alert.alert("Đăng ký thành công!", "Vui lòng xác thực tài khoản.");
+      // Alert.alert("Đăng ký thành công!", "Vui lòng xác thực tài khoản.");
+      showToast({
+        type: "success",
+        text1: "Thành công",
+        text2: "Đăng ký tài khoản thành công 🥰",
+        position: "top",
+        duration: 3000,
+      });
       dispatch(resetRegisterState());
-      navigation.navigate("VerifyAccount");
+      navigation.navigate("LoginScreen");
     }
     if (registerError) {
-      Alert.alert("Lỗi đăng ký", registerError);
+      console.log("Lỗi đăng ký", registerError);
+      // Alert.alert("Lỗi đăng ký", registerError);
+      showToast({
+        type: "error",
+        text1: "Lỗi ",
+        text2: "Lỗi đăng ký tài khoản 😡",
+        position: "top",
+        duration: 3000,
+      });
       dispatch(resetRegisterState());
     }
   }, [registerSuccess, registerError, dispatch, navigation]);
@@ -101,19 +117,69 @@ const RegisterScreen = ({ navigation }) => {
     return isValid;
   };
 
+  const fetchRegister = async (retryCount = 2, delay = 1000) => {
+    for (let attempt = 1; attempt <= retryCount; attempt++) {
+      try {
+        const registerData = {
+          email: email,
+          password: password,
+          firstName: firstName,
+          lastName: lastName,
+          phoneNumber: phoneNumber,
+        };
+        // console.log("goi try catch lan 1");
+        await dispatch(registerUser(registerData)).unwrap();
+
+        return;
+      } catch (error) {
+        showToast({
+          type: "error",
+          text1: "Lỗi ",
+          text2: "Không thể đăng ký tài khoản",
+          position: "top",
+          duration: 3000,
+        });
+        console.log(`Attempt ${attempt} failed to register:`, error);
+        if (attempt === retryCount) {
+          throw error;
+        }
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+      }
+    }
+  };
+
+  const fetchData = async () => {
+    try {
+      await Promise.all([fetchRegister()]);
+    } catch (error) {
+      console.log("Failed to fetch data in RegisterScreen:", error);
+      showToast({
+        type: "error",
+        text1: "Lỗi đăng ký",
+        text2: "Không thể đăng ký tài khoản mới",
+        position: "top",
+        duration: 3000,
+      });
+    }
+  };
+
   // Hàm xử lý khi nhấn nút "Tạo tài khoản"
-  const handleRegister = () => {
+  const handleRegister = async () => {
     if (validateForm()) {
       // Dữ liệu hợp lệ, chuẩn bị dữ liệu gửi lên backend
-      const registerData = {
-        email: email,
-        password: password,
-        firstName: firstName,
-        lastName: lastName,
-        phoneNumber: phoneNumber,
-      };
-      // Gọi API đăng ký
-      dispatch(registerUser(registerData));
+      try {
+        await fetchData();
+        // Gọi API đăng ký
+      } catch (error) {
+        console.log("Lỗi tại file RegisterScreen:", error);
+        showToast({
+          type: "error",
+          text1: "Lỗi",
+          text2: "Lỗi tại file RegisterScreen:",
+          position: "top",
+          duration: 3000,
+        });
+      }
     }
   };
 

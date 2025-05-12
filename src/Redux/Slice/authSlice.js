@@ -169,7 +169,7 @@ export const registerUser = createAsyncThunk(
       });
 
       const data = await response.json();
-
+      console.log("60Register", data);
       if (data.statusCode !== 200) {
         return rejectWithValue(data.message || "Lỗi khi đăng ký");
       }
